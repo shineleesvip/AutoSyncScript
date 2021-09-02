@@ -2,34 +2,6 @@
 
 [![Anurag's GitHub stats](https://github-readme-stats.vercel.app/api?username=shineleesvip)](https://github.com/anuraghazra/github-readme-stats)
 
-## 更新日志
-
-```
-4月5日 22:30，
-
-拉取了一个新的备份库
-
-3月28日9:00，
-
-拉取了一个备份有 lxk0301 大佬脚本的第三方备份库，非常感谢勤劳的作者ElsaKing
-
-3月26日16:00，
-
-1、因ichenzhe大佬删库，目前此任务的拉取已报错，请删除对应yml就可以。已经拉到的分支就是最后备份了，且用且珍惜。
-
-3月26日9:15，
-
-1、增加了对 奇趣史蒂夫 脚本库的拉取
-2、增加了对 songyangzz 脚本库的拉取
-3、增加了对 iepngs 脚本库的拉取
-4、增加了对 lowking 脚本库的拉取
-
-3月26日9:00，
-
-1、修复了 chavyleung 脚本库无法正确拉取的bug ，可以重新fork本项目获取更新，可以到chavyleung.yml中复制代码修改到您的仓库
-
-```
-
 
 ### AutoSyncScript项目介绍
 ```
