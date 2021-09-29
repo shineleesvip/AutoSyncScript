@@ -7,7 +7,7 @@
 name: NobyDa-sync 
 on:
   schedule:
-    - cron: '6 */3 * * *'
+    - cron: '6 8 * * *'
   workflow_dispatch:
   watch:
     types: started
