@@ -1,7 +1,7 @@
 name: DD-D1-sync 
 on:
   schedule:
-    - cron: '14 */3 * * *'
+    - cron: '14 7 * * *'
   workflow_dispatch:
   watch:
     types: started
