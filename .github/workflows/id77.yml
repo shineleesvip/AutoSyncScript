@@ -1,7 +1,7 @@
 name: id77-sync 
 on:
   schedule:
-    - cron: '1 */3 * * *'
+    - cron: '30 12 * * *'
   workflow_dispatch:
   watch:
     types: started
