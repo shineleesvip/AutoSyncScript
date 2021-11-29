@@ -23,6 +23,6 @@ jobs:
         if: env.PAT
         with:
           source_repo: "https://github.com/NolanHzy/nvjdcdocker.git"
-          source_branch: "master"
+          source_branch: "main"
           destination_branch: "nvjdc"
           github_token: ${{ secrets.PAT }}
