@@ -25,6 +25,24 @@ var client_id=""
 var client_key=""
 var pid=""
 var timestamp=""
+//是否完成推广位的媒体id的绑定
+var bind bool=false
+
+type ItemQueryBind struct {
+	AuthorityQueryResponse struct {
+		Bind      int    `json:"bind"`
+		RequestID string `json:"request_id"`
+	} `json:"authority_query_response"`
+}
+
+type ItemSetBind struct {
+	PIDBindResponse struct {
+		Result struct {
+			Msg    string `json:"msg"`
+			Result bool   `json:"result"`
+		} `json:"result"`
+	} `json:"p_id_bind_response"`
+}
 
 type ItemUrl struct {
 	GoodsZsUnitGenerateResponse struct {
@@ -51,7 +69,22 @@ func init() {
 		{
 			Rules: []string{"raw https?://mobile\\.yangkeduo\\.com/goods.?\\.html\\?goods_id=(\\d+)"},
 			Handle: func(s core.Sender) interface{} {
-				fmt.Println(s.GetContent())			
+				//fmt.Println(s.GetContent())
+				//查询是否绑定
+				if(s.IsAdmin()){
+					bind=queryBind()
+					fmt.Sprintf("绑定结果："+strconv.FormatBool(bind))
+					if(!bind){
+						if(setBind()){
+							bind=true
+							return "已完成绑定备案，请再次发送链接或分享"
+						}else{
+							bind=false
+							return "自动绑定失败，请到网站自行绑定备案！"
+						}
+					}
+				}
+				pinduoduo.Set("bind",bind)
 				return getPinduoduo(s.GetContent())
 			},
 		},
@@ -59,8 +92,87 @@ func init() {
 	core.OttoFuncs["pinduoduo"] = getPinduoduo //类似于向核心组件注册
 }
 
+//查询是否绑定
+func queryBind() bool{
+	//对公共参数和业务参数按照ASCII排序,不参加排序：app_secret和sign
+	apitype:="pdd.ddk.member.authority.query"
+	client_id:=pinduoduo.Get("client_id")
+	pid:=pinduoduo.Get("pid")
+   	client_key:=pinduoduo.Get("client_key")
+   	//Unix时间timestamp
+   	timestamp:= strconv.FormatInt(time.Now().Unix(),10)
+   	//大写(MD5(client_secret+key1+value1+key2+value2+client_secret))
+   	//将排序好的参数名和参数值拼装在一起，两头加client_key
+   	strCon:=client_key+
+		   "client_id"+client_id+
+		   "pid"+pid+
+		   "timestamp"+timestamp+
+		   "type"+apitype+
+		   client_key
+   //md5
+   //md5
+	strMd5:=md5.Sum([]byte(strCon))
+	upMd5:=strings.ToUpper(fmt.Sprintf("%x",strMd5))
+	//将长链接变换成短链接
+	req := httplib.Get("https://gw-api.pinduoduo.com/api/router?"+
+					"type="+apitype+
+					"&client_id="+client_id+
+					"&timestamp="+timestamp+
+					"&sign="+upMd5+
+					"&pid="+pid)
+	data, _:=req.Bytes()
+	//fmt.Println(string(data))
+	res:=&ItemQueryBind{}
+	json.Unmarshal([]byte(data),&res)
+	//fmt.Println(res.GoodsZsUnitGenerateResponse.ShortUrl)
+	if(res.AuthorityQueryResponse.Bind==0){
+		return false
+	}else{
+		return true
+	}
+}
+
+func setBind() bool{
+	//对公共参数和业务参数按照ASCII排序,不参加排序：app_secret和sign
+	apitype:="pdd.ddk.oauth.pid.mediaid.bind"
+	client_id:=pinduoduo.Get("client_id")
+	pid:=pinduoduo.Get("pid")
+   	client_key:=pinduoduo.Get("client_key")
+   	//Unix时间timestamp
+   	timestamp:= strconv.FormatInt(time.Now().Unix(),10)
+   	//大写(MD5(client_secret+key1+value1+key2+value2+client_secret))
+   	//将排序好的参数名和参数值拼装在一起，两头加client_key
+   	strCon:=client_key+
+		   "client_id"+client_id+
+		   "pid"+pid+
+		   "timestamp"+timestamp+
+		   "type"+apitype+
+		   client_key
+   //md5
+	strMd5:=md5.Sum([]byte(strCon))
+	upMd5:=strings.ToUpper(fmt.Sprintf("%x",strMd5))
+	//将长链接变换成短链接
+	req := httplib.Get("https://gw-api.pinduoduo.com/api/router?"+
+					"type="+apitype+
+					"&client_id="+client_id+
+					"&timestamp="+timestamp+
+					"&sign="+upMd5+
+					"&pid="+pid)
+	data, _:=req.Bytes()
+	//fmt.Println(string(data))
+	res:=&ItemSetBind{}
+	json.Unmarshal([]byte(data),&res)
+	//fmt.Println(res.GoodsZsUnitGenerateResponse.ShortUrl)
+	if(res.PIDBindResponse.Result.Result){
+		return true
+	}else{
+		return false
+	}
+}
+
+
 func getPinduoduo(info string) string{
-	/*将长链接变换成短链接*/
+
 	//从返回的数据中提取出商品id
 	var source_url=""
 	reg := regexp.MustCompile(`https?://mobile\.yangkeduo\.com/goods.?\.html\?goods_id=(\d+)`)
@@ -69,6 +181,7 @@ func getPinduoduo(info string) string{
 		source_url = params[0]
 		fmt.Println("链接:"+source_url+"\n")
 	}
+	
 	return getShortUrl(source_url)
 }
 
