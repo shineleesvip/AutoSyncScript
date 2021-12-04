@@ -1,2 +1,2 @@
 # pdd_fanli
-the third exsition of sillyGirl
+Third party extension interface for sillyGirl
