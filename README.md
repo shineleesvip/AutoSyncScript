@@ -6,7 +6,7 @@ https://github.com/hdbjlizhe/pdd_fanli
 
 具体步骤如下：
 
-1.登入账号 多多进宝 (pinduoduo.com)
+1.登入账号 https://jinbao.pinduoduo.com/
 
 2.推广管理->推广者登记
 
@@ -35,3 +35,4 @@ set pinduoduo pid XXX
 最后再重启一下sillyGirl
 
 5.效果图：
+![微信图片_20211204105622](https://user-images.githubusercontent.com/22290807/144696501-3c914fc0-1152-48a6-99a7-d1e95c4e755b.jpg)
