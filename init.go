@@ -89,7 +89,7 @@ func init() {
 			},
 		},
 	})
-	core.OttoFuncs["pinduoduo"] = getPinduoduo //类似于向核心组件注册
+	core.OttoFuncs["pinduoduo"] = getPinduoduo
 }
 
 //查询是否绑定
