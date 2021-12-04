@@ -16,7 +16,7 @@ https://github.com/hdbjlizhe/pdd_fanli
 
 创建应用会得到client_id和client_key
 
-还要做一下绑定备案，这个绑定备案我是用pdd开放平台的API测评工具完成的。扩展插件里包含了绑定的功能，但是此功能未测试，不能保证其可用性。
+还要做一下绑定备案，这个绑定备案我是用pdd开放平台的API测试工具完成的。扩展插件里包含了绑定的功能，但是此功能未测试，不能保证其可用性。
 
 4.https://gituhub.com/hdbjlizhe/pdd_fanli，文件夹下载到sillyGirl/develop/下面
 
