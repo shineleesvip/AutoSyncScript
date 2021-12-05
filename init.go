@@ -44,6 +44,7 @@ import (
 //	"encoding/hex"
 //	"unicode/utf8"
 //	"strings"
+	"strconv"
 
 	"github.com/beego/beego/v2/adapter/httplib"
 	"github.com/cdle/sillyGirl/core"
@@ -55,6 +56,12 @@ import (
 var taobao = core.NewBucket("taobao")
 //订单侠apikey
 var apikey=taobao.Get("apikey")
+
+//商品详情
+var title string=""
+var reserve_price float64=0
+var zk_final_price float64=0
+var qh_final_price float64=0
 
 //淘宝商品结构体
 type Item struct {
@@ -73,6 +80,22 @@ type Item struct {
 		MaxCommissionRate string `json:"max_commission_rate"`
 		RewardInfo        int    `json:"reward_info"`
 		Coupon            string `json:"coupon"`
+		ItemInfo          struct {
+			Title       string `json:"title"`
+			PictURL     string `json:"pict_url"`
+			SmallImages struct {
+				String []string `json:"string"`
+			} `json:"small_images"`
+			ReservePrice      float64 `json:"reserve_price"`
+			ZkFinalPrice      float64 `json:"zk_final_price"`
+			QhFinalPrice      float64 `json:"qh_final_price"`
+			QhFinalCommission float64 `json:"qh_final_commission"`
+			UserType          int     `json:"user_type"`
+			Volume            int     `json:"volume"`
+			SellerID          int     `json:"seller_id"`
+			Nick              string  `json:"nick"`
+			MaterialLibType   string  `json:"material_lib_type"`
+		} `json:"itemInfo"`
 	} `json:"data"`
 }
 
@@ -114,7 +137,11 @@ func getTaobao(info string) string{
 	fmt.Println(tbkLongUrl+"\n")
 	tbkShortUrl:=getTbkShortUrl(tbkLongUrl)//得到商品推广短链接
 	fmt.Println(tbkShortUrl+"\n")
-	return tbkShortUrl
+	return title+
+			"\n一口价："+strconv.FormatFloat(reserve_price,'g',5,32)+
+			"\n折扣价："+strconv.FormatFloat(zk_final_price,'g',5,32)+
+			"\n券后价："+strconv.FormatFloat(qh_final_price,'g',5,32)+
+			"\n抢购链接："+tbkShortUrl
 }
 
 /*
@@ -125,7 +152,7 @@ func getShareUrl(shareInfo string) string {
 		if reg != nil {
 			s := reg.FindStringSubmatch(shareInfo)
 			if len(s) > 0 {
-			//	fmt.Printf(s[0])
+				fmt.Printf("\n分享到媒体中的原始链接："+s[0])
 				return s[0]
 			}
 		}
@@ -136,18 +163,31 @@ func getShareUrl(shareInfo string) string {
 通过分享到媒体中的分享短链得到原始链接中的商品id
 */
 func getIids(shareUrl string) string {
+	//检查分享链接
+	if (shareUrl==""){
+		return ""
+	}
+	fmt.Println("从原始链接中提取id:"+shareUrl)
+	//访问分享链接
 	req := httplib.Get(shareUrl)
 	data, err := req.Bytes()
-	if err != nil {
-		return `{}`
-	}
+	dropErr(err)
+	fmt.Println("访问分享链接结果:"+string(data))
 	//从返回的数据中提取出商品id
-	reg := regexp.MustCompile(`https?://a\.m\.taobao\.com/i([\d+]{12}).htm`)
+	reg := regexp.MustCompile(`https?://a\.m\.(taobao|tmall)\.com/i([\d+]{12}).htm`)
 	if reg != nil {
 		params := reg.FindStringSubmatch(string(data))
-		iids := params[1]
-		//fmt.Println("商品id:"+num_iids+"\n")
-		return iids
+		fmt.Println("\n以下为循环输出params:\n")
+		for _, param:=range params{
+			fmt.Println(param)
+		}
+		if(len(params)>2){
+			iids := params[2]
+			fmt.Println("\n淘宝商品id:"+iids+"\n")
+			if(iids!=""){
+				return iids
+			}
+		}
 	}
 	return ""
 }
@@ -156,15 +196,22 @@ func getIids(shareUrl string) string {
 通过商品id获取淘宝客推广链接
 */
 func getTbkLongUrl(iids string)string{
+	if(iids==""){return ""}
 	//根据id获取长链接
 	req := httplib.Get("http://api.tbk.dingdanxia.com/tbk/id_privilege?"+
 					"apikey="+apikey+
-					"&id="+iids)	
+					"&id="+iids+
+					"&itemInfo=true")
+					//"&itemInfo=true")	
 	data, _:=req.Bytes()
-	fmt.Println(string(data))
+	fmt.Println("------\n"+string(data))
 	res := &Item{}
 	json.Unmarshal([]byte(data), &res)
-	fmt.Println(res.Data.ItemURL)
+	title=res.Data.ItemInfo.Title
+	reserve_price=res.Data.ItemInfo.ReservePrice
+	zk_final_price=res.Data.ItemInfo.ZkFinalPrice
+	qh_final_price=res.Data.ItemInfo.QhFinalPrice
+	//fmt.Println(res.Data.ItemURL)
 	return res.Data.ItemURL	
 }
 
@@ -172,6 +219,7 @@ func getTbkLongUrl(iids string)string{
 将淘宝客推广长链接获取推广短链接
 */
 func getTbkShortUrl(url string)string{
+	if(url==""){return ""}
 	//将长链接变换成短链接
 	req := httplib.Get("http://api.tbk.dingdanxia.com/tbk/spread_get?"+
 					"apikey="+apikey+
