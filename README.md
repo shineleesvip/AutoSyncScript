@@ -35,7 +35,10 @@ set pinduoduo pid XXX
 最后再重启一下sillyGirl
 
 5.效果图：
+
 ![144696501-3c914fc0-1152-48a6-99a7-d1e95c4e755b](https://user-images.githubusercontent.com/22290807/144797607-dca114a5-6be3-4385-af0f-eeab99c60237.jpg)
 
-6.请我喝杯咖啡（buy me a cup of coffee）
-![微信图片_20211206140154](https://user-images.githubusercontent.com/22290807/144797154-6516c74e-fec8-4342-a628-20997eef5826.png)
+6.请我喝杯咖啡（buy me a cup of coffee!）
+
+![微信图片_20211206140154](https://user-images.githubusercontent.com/22290807/144797795-c762d435-1670-446e-b323-177e529a5659.png)
+
