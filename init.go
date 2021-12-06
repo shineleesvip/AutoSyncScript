@@ -27,6 +27,8 @@ var pid=""
 var timestamp=""
 //是否完成推广位的媒体id的绑定
 var bind bool=false
+//商品
+var goodTitle=""
 
 type ItemQueryBind struct {
 	AuthorityQueryResponse struct {
@@ -89,7 +91,7 @@ func init() {
 			},
 		},
 	})
-	core.OttoFuncs["pinduoduo"] = getPinduoduo
+	core.OttoFuncs["pinduoduo"] = getPinduoduo //类似于向核心组件注册
 }
 
 //查询是否绑定
@@ -109,7 +111,6 @@ func queryBind() bool{
 		   "timestamp"+timestamp+
 		   "type"+apitype+
 		   client_key
-   //md5
    //md5
 	strMd5:=md5.Sum([]byte(strCon))
 	upMd5:=strings.ToUpper(fmt.Sprintf("%x",strMd5))
@@ -172,17 +173,24 @@ func setBind() bool{
 
 
 func getPinduoduo(info string) string{
-
+	//从数据中提取title
+	reg := regexp.MustCompile(`<title>(.*)</title>`)
+	if reg != nil {
+		params := reg.FindStringSubmatch(string(info))
+		if(len(params)>1){
+			goodTitle = params[1]
+			fmt.Println("商品名称:"+goodTitle+"\n")
+		}
+	}
 	//从返回的数据中提取出商品id
 	var source_url=""
-	reg := regexp.MustCompile(`https?://mobile\.yangkeduo\.com/goods.?\.html\?goods_id=(\d+)`)
+	reg = regexp.MustCompile(`https?://mobile\.yangkeduo\.com/goods.?\.html\?goods_id=(\d+)`)
 	if reg != nil {
 		params := reg.FindStringSubmatch(string(info))
 		source_url = params[0]
 		fmt.Println("链接:"+source_url+"\n")
-	}
-	
-	return getShortUrl(source_url)
+	}	
+	return goodTitle+"\n购买链接"+getShortUrl(source_url)
 }
 
 //获取短链接
