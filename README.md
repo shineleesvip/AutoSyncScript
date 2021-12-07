@@ -1,4 +1,4 @@
-# tb_fanli   交流群：418353744
+# tb_fanli   qq交流群：418353744
 
 Third party extension interface for sillyGirl.
 
