@@ -1,4 +1,5 @@
 # pdd_fanli
+# 交流群：418353744
 Third party extension interface for sillyGirl
 按照sillyGirl的源码，自己拼凑了一个扩展插件，方便在pdd上获取推广佣金。
 
