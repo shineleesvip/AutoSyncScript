@@ -10,7 +10,10 @@ import (
 //	"unicode/utf8"
 	"strings"
 	"strconv"
+	"sort"
+//	"net/url"
 
+	"github.com/buger/jsonparser"
 	"github.com/beego/beego/v2/adapter/httplib"
 	"github.com/cdle/sillyGirl/core"
 	"github.com/gin-gonic/gin"
@@ -20,9 +23,10 @@ import (
 
 var pinduoduo = core.NewBucket("pinduoduo")
 //拼多多
+var pddSite="https://gw-api.pinduoduo.com/api/router"
 var apitype ="pdd.ddk.goods.zs.unit.url.gen"
 var client_id=""
-var client_key=""
+var client_key=pinduoduo.Get("client_key")
 var pid=""
 var timestamp=""
 //是否完成推广位的媒体id的绑定
@@ -37,16 +41,15 @@ type ItemQueryBind struct {
 		RequestID string `json:"request_id"`
 	} `json:"authority_query_response"`
 }
-
-type ItemSetBind struct {
-	PIDBindResponse struct {
-		Result struct {
-			Msg    string `json:"msg"`
-			Result bool   `json:"result"`
-		} `json:"result"`
-	} `json:"p_id_bind_response"`
+type UrlBind struct {
+	RpPromotionURLGenerateResponse struct {
+		URLList []struct {
+			MobileURL string `json:"mobile_url"`
+			URL       string `json:"url"`
+		} `json:"url_list"`
+		RequestID string `json:"request_id"`
+	} `json:"rp_promotion_url_generate_response"`
 }
-
 type ItemUrl struct {
 	GoodsZsUnitGenerateResponse struct {
 		MultiGroupMobileShortURL string `json:"multi_group_mobile_short_url"`
@@ -140,13 +143,7 @@ func init() {
 					bind=queryBind()
 					fmt.Sprintf("绑定结果："+strconv.FormatBool(bind))
 					if(!bind){
-						if(setBind()){
-							bind=true
-							return "已完成绑定备案，请再次发送链接或分享"
-						}else{
-							bind=false
-							return "自动绑定失败，请到网站自行绑定备案！"
-						}
+						return "点击链接授权备案:\n"+setBind()
 					}
 				}
 				pinduoduo.Set("bind",bind)
@@ -156,87 +153,55 @@ func init() {
 	})
 	core.OttoFuncs["pinduoduo"] = getPinduoduo //类似于向核心组件注册
 }
-
+//授权备案：https://jinbao.pinduoduo.com/qa-system?questionId=218
 //查询是否绑定
 func queryBind() bool{
 	//对公共参数和业务参数按照ASCII排序,不参加排序：app_secret和sign
-	apitype:="pdd.ddk.member.authority.query"
-	client_id:=pinduoduo.Get("client_id")
-	pid:=pinduoduo.Get("pid")
-   	client_key:=pinduoduo.Get("client_key")
-   	//Unix时间timestamp
-   	timestamp:= strconv.FormatInt(time.Now().Unix(),10)
+	params:=map[string]string{
+		"type":"pdd.ddk.member.authority.query",
+		"client_id":pinduoduo.Get("client_id"),
+		"pid":pinduoduo.Get("pid"),
+   		"timestamp": strconv.FormatInt(time.Now().Unix(),10),
+	}
+	client_key:=pinduoduo.Get("client_key")
    	//大写(MD5(client_secret+key1+value1+key2+value2+client_secret))
    	//将排序好的参数名和参数值拼装在一起，两头加client_key
-   	strCon:=client_key+
-		   "client_id"+client_id+
-		   "pid"+pid+
-		   "timestamp"+timestamp+
-		   "type"+apitype+
-		   client_key
-   //md5
-	strMd5:=md5.Sum([]byte(strCon))
-	upMd5:=strings.ToUpper(fmt.Sprintf("%x",strMd5))
-	//将长链接变换成短链接
-	req := httplib.Get("https://gw-api.pinduoduo.com/api/router?"+
-					"type="+apitype+
-					"&client_id="+client_id+
-					"&timestamp="+timestamp+
-					"&sign="+upMd5+
-					"&pid="+pid)
-	data, _:=req.Bytes()
-	//fmt.Println(string(data))
-	res:=&ItemQueryBind{}
-	json.Unmarshal([]byte(data),&res)
-	//fmt.Println(res.GoodsZsUnitGenerateResponse.ShortUrl)
-	if(res.AuthorityQueryResponse.Bind==0){
-		return false
-	}else{
-		return true
-	}
+   	sign:=getMd5(client_key,params)
+	data:=accessApi(pddSite,params,sign)
+	
+	bind , _ :=jsonparser.GetInt([]byte(data),"authority_query_response","bind")
+	fmt.Println("检测是否完成授权备案："+strconv.FormatInt(bind,10))
+	return bind==1
+	
 }
 
-func setBind() bool{
+func setBind() string{
 	//对公共参数和业务参数按照ASCII排序,不参加排序：app_secret和sign
-	apitype:="pdd.ddk.oauth.pid.mediaid.bind"
-	client_id:=pinduoduo.Get("client_id")
-	pid:=pinduoduo.Get("pid")
-   	client_key:=pinduoduo.Get("client_key")
-   	//Unix时间timestamp
-   	timestamp:= strconv.FormatInt(time.Now().Unix(),10)
-   	//大写(MD5(client_secret+key1+value1+key2+value2+client_secret))
-   	//将排序好的参数名和参数值拼装在一起，两头加client_key
-   	strCon:=client_key+
-		   "client_id"+client_id+
-		   "pid"+pid+
-		   "timestamp"+timestamp+
-		   "type"+apitype+
-		   client_key
-   //md5
-	strMd5:=md5.Sum([]byte(strCon))
-	upMd5:=strings.ToUpper(fmt.Sprintf("%x",strMd5))
-	//将长链接变换成短链接
-	req := httplib.Get("https://gw-api.pinduoduo.com/api/router?"+
-					"type="+apitype+
-					"&client_id="+client_id+
-					"&timestamp="+timestamp+
-					"&sign="+upMd5+
-					"&pid="+pid)
-	data, _:=req.Bytes()
-	//fmt.Println(string(data))
-	res:=&ItemSetBind{}
-	json.Unmarshal([]byte(data),&res)
-	//fmt.Println(res.GoodsZsUnitGenerateResponse.ShortUrl)
-	if(res.PIDBindResponse.Result.Result){
-		return true
-	}else{
-		return false
+	params:=map[string]string{
+		"type": 		"pdd.ddk.rp.prom.url.generate",
+		"client_id": 	pinduoduo.Get("client_id"),
+		"p_id_list": 	"[\""+pinduoduo.Get("pid")+"\"]",
+		//"p_id_list": 	"%5B%22"+pinduoduo.Get("pid")+"%22%5D",
+		"data_type":    "JSON",
+		"channel_type": "10",
+		"timestamp": strconv.FormatInt(time.Now().Unix(),10),
 	}
+	client_key:=pinduoduo.Get("client_key")
+   	//大写(MD5(client_secret+key1+value1+key2+value2+client_secret))
+   	sign:=getMd5(client_key,params)
+	fmt.Println("------------------------------------------------------------")
+	fmt.Println("sign:"+sign)
+	//params["p_id_list"]="%5B%22"+pinduoduo.Get("pid")+"%22%5D"
+	data:=accessApi(pddSite,params,sign)
+	//fmt.Println("绑定返回值："+string(data))
+	res := &UrlBind{}
+	json.Unmarshal(data, &res)
+	fmt.Println("------------------------------------------------------------")
+	return string(res.RpPromotionURLGenerateResponse.URLList[0].MobileURL)
 }
-
 
 func getPinduoduo(info string) string{
-	//从数据中提取title
+	//从分享到媒体中的信息提取title
 	reg := regexp.MustCompile(`<title>(.*)</title>`)
 	if reg != nil {
 		params := reg.FindStringSubmatch(string(info))
@@ -255,51 +220,42 @@ func getPinduoduo(info string) string{
 		goods_id:=params[1]		
 		//通过goods_id获取goods_sign
 		goods_details =getGoodsDetails(goods_id)
-		//fmt.Println("\n商品goods_sign:"+goods_sign+"\n")
-		
-	}	
-	return goodTitle + goods_details +"\n购买链接"+getShortUrl(source_url)
+		//fmt.Println("\n商品goods_sign:"+goods_sign+"\n")		
+	}
+	short_url:=""
+	if (goods_details!=""){
+		short_url = goods_details +"\n惠购链接"+getShortUrl(source_url)
+	}else{
+		short_url = goodTitle + "\n惠购链接"+getShortUrl(source_url)
+	}
+	return short_url
 }
 
-//通过goods_id获取goods_sign
+//通过goods_id获取商品详情及goods_sign
 func getGoodsDetails(goods_id string)string{
-	//对公共参数和业务参数按照ASCII排序,不参加排序：app_secret和sign
-	apitype="pdd.ddk.goods.search"
-	client_id=pinduoduo.Get("client_id")
-	pid=pinduoduo.Get("pid")
+	params :=map[string]string {
+		"type":"pdd.ddk.goods.search",
+		"client_id":pinduoduo.Get("client_id"),
+		"pid": pinduoduo.Get("pid"),
+		"timestamp":strconv.FormatInt(time.Now().Unix(),10),
+		"keyword": goods_id,
+	}
 	client_key=pinduoduo.Get("client_key")
-	//Unix时间timestamp
-	timestamp= strconv.FormatInt(time.Now().Unix(),10)
-	//大写(MD5(client_secret+key1+value1+key2+value2+client_secret))
-	//将排序好的参数名和参数值拼装在一起，两头加client_key
-	strCon:=client_key+
-		"client_id"+client_id+
-		"keyword"+goods_id+
-		"pid"+pid+
-		"timestamp"+timestamp+
-		"type"+apitype+
-		client_key
-	//md5
-	strMd5:=md5.Sum([]byte(strCon))
-	upMd5:=strings.ToUpper(fmt.Sprintf("%x",strMd5))
+	upMd5:=getMd5(client_key,params)
 	//将长链接变换成短链接
-	req := httplib.Get("https://gw-api.pinduoduo.com/api/router?"+
-				"type="+apitype+
-				"&client_id="+client_id+	
-				"&timestamp="+timestamp+
-				"&sign="+upMd5+
-				"&pid="+pid+
-				"&keyword="+goods_id)
-	data, _:=req.Bytes()
-	//fmt.Println(string(data))
+	data := accessApi(pddSite,params,upMd5)
+	fmt.Println("商品详情："+string(data))
+	goodName, _ := jsonparser.GetString(data, "goods_name")
+	fmt.Println("商品名称："+ goodName)
 	res:=&ItemSign{}
 	json.Unmarshal([]byte(data),&res)
 	//fmt.Println(res.GoodsZsUnitGenerateResponse.ShortUrl)
 	rlt :=""
-	
+	if(res.GoodsSearchResponse.GoodsList[0].GoodsName!=""){
+		rlt+=(res.GoodsSearchResponse.GoodsList[0].GoodsName)			
+	}	
 	if(res.GoodsSearchResponse.GoodsList[0].MinGroupPrice!=0){
-		rlt+="\n最小拼团价："+strconv.FormatFloat((res.GoodsSearchResponse.GoodsList[0].MinGroupPrice/100),'g',5,32)
-			
+		rlt+="\n最小拼团价："+strconv.FormatFloat((res.GoodsSearchResponse.GoodsList[0].MinGroupPrice/100),'g',5,32)			
 	}
 	if(res.GoodsSearchResponse.GoodsList[0].MinGroupPrice!=0){
 		rlt+="\n最小单买价："+strconv.FormatFloat((res.GoodsSearchResponse.GoodsList[0].MinNormalPrice/100),'g',5,32)
@@ -310,38 +266,74 @@ func getGoodsDetails(goods_id string)string{
 //获取短链接
 func getShortUrl(source_url string) string {
 	//对公共参数和业务参数按照ASCII排序,不参加排序：app_secret和sign
-	apitype="pdd.ddk.goods.zs.unit.url.gen"
- 	client_id=pinduoduo.Get("client_id")
- 	pid=pinduoduo.Get("pid")
+	params :=map[string]string {
+		"type":		"pdd.ddk.goods.zs.unit.url.gen",
+		"client_id": 	pinduoduo.Get("client_id"),
+		"pid":			pinduoduo.Get("pid"),
+		"timestamp":	strconv.FormatInt(time.Now().Unix(),10),
+		"source_url":	source_url,
+	}
 	client_key=pinduoduo.Get("client_key")
-	//Unix时间timestamp
-	timestamp= strconv.FormatInt(time.Now().Unix(),10)
-	//大写(MD5(client_secret+key1+value1+key2+value2+client_secret))
-	//将排序好的参数名和参数值拼装在一起，两头加client_key
-	strCon:=client_key+
-			"client_id"+client_id+
-			"pid"+pid+
-			"source_url"+source_url+
-			"timestamp"+timestamp+
-			"type"+apitype+
-			client_key
-	//md5
-	strMd5:=md5.Sum([]byte(strCon))
-	upMd5:=strings.ToUpper(fmt.Sprintf("%x",strMd5))
+	//MD5
+	upMd5:=getMd5(client_key,params)
 	//将长链接变换成短链接
-	req := httplib.Get("https://gw-api.pinduoduo.com/api/router?"+
-					"type="+apitype+
-					"&client_id="+client_id+
-					"&timestamp="+timestamp+
-					"&sign="+upMd5+
-					"&pid="+pid+
-					"&source_url="+source_url)
-	data, _:=req.Bytes()
-	//fmt.Println(string(data))
+	data:=accessApi(pddSite,params,upMd5)
+	fmt.Println("getShortUrl中得到的接口返回值："+string(data))
 	res:=&ItemUrl{}
 	json.Unmarshal([]byte(data),&res)
 	//fmt.Println(res.GoodsZsUnitGenerateResponse.ShortUrl)
 	return string(res.GoodsZsUnitGenerateResponse.ShortURL)
+}
+
+//访问接口
+func accessApi(site string,params map[string]string,sign string) []byte{
+	var dataParams string=""
+	//准备参数
+	for key :=range params{
+		dataParams += key+"="+params[key]+"&"
+	}
+	dataParams +="sign="+getMd5(client_key,params)
+	//真实访问
+	urlstr := site+"?"+dataParams
+	//escapeUrl := url.QueryEscape(urlstr)
+	fmt.Println(urlstr)
+	req := httplib.Get(urlReplace(urlstr))
+	rlt,err := req.Bytes()
+	//str,err:=req.String()
+	dropErr(err)
+	return rlt
+}
+
+//获取md5的值
+func getMd5(client_key string,params map[string]string) string{
+	var dataParams string
+	var keys []string
+	//从map中提取所有的key
+	for k :=range params{
+		keys=append(keys,k)
+	}
+	//对keys进行排序
+	sort.Strings(keys)
+	//拼接
+	for _, k:=range keys{
+		fmt.Println("key:",k,"value:",params[k])
+		dataParams +=k+params[k]
+	}
+	dataParams=client_key+dataParams+client_key
+	fmt.Println("MD5函数拼接的字符串："+dataParams)
+	//md5
+	strMd5:=md5.Sum([]byte(dataParams))
+	upMd5:=strings.ToUpper(fmt.Sprintf("%x",strMd5))
+	fmt.Println("MD5函数获取的MD5值："+upMd5)
+	return upMd5
+}
+
+//替换url中的特殊字符
+func urlReplace(url string) string{
+	urlstr:=strings.Replace(url,"[","%5B",-1)
+	urlstr=strings.Replace(urlstr,"]","%5D",-1)
+	urlstr=strings.Replace(urlstr,"\"","%22",-1)
+	return urlstr
 }
 
 // 创建一个错误处理函数，避免过多的 if err != nil{} 出现
