@@ -175,18 +175,38 @@ func getShareUrl(shareInfo string) string {
 func getIids(shareUrl string) string {
 	var rlt=""
 	//检查分享链接
-	if (shareUrl==""){
-		return ""
-	}
-	fmt.Println("从原始链接中提取id:"+shareUrl)
-	//访问分享链接
-	req := httplib.Get(shareUrl)
-	data, err := req.Bytes()
-	dropErr(err)
-	fmt.Println("访问分享链接结果:"+string(data))
-	//从返回的数据中提取出商品id
-	reg := regexp.MustCompile(`https?://a\.m\.(taobao|tmall)\.com/i([\d+]{12}).htm`)
-	if reg != nil {
+	if (shareUrl !=""){
+		fmt.Println("从原始链接中提取id:"+shareUrl)
+		//访问分享链接
+		req := httplib.Get(shareUrl)
+		data, err := req.Bytes()
+		dropErr(err)
+		fmt.Println("访问分享链接结果:"+string(data))
+		//从返回的数据中提取出商品id
+		reg_android := regexp.MustCompile(`https?://a\.m\.(taobao|tmall)\.com/i([\d+]{12}).htm`)
+		reg_ios :=regexp.MustCompile(`id=([\d+]{12})`)
+		params :=reg_android.FindStringSubmatch(string(data))
+		fmt.Println("\n以下为循环输出params:\n")
+			for _, param:=range params{
+				fmt.Println(param)
+			}
+		if (len(params)>2){			
+			rlt=params[2]
+			fmt.Println("\n淘宝商品id:"+rlt+"\n")
+		}else {
+			fmt.Println("进入ios的提取id程序：")
+			params = reg_ios.FindStringSubmatch(string(data))
+			fmt.Println("\n以下为循环输出params:\n")
+			for _, param:=range params{
+				fmt.Println(param)
+			}
+			fmt.Println("params的长度："+strconv.Itoa(len(params)))
+			if (len(params)>=2){
+				rlt = params[1]
+				fmt.Println("\n淘宝商品id:"+rlt+"\n")
+			}
+		}
+	/*if reg != nil {
 		params := reg.FindStringSubmatch(string(data))
 		fmt.Println("\n以下为循环输出params:\n")
 		for _, param:=range params{
@@ -196,6 +216,7 @@ func getIids(shareUrl string) string {
 			rlt= params[2]
 			fmt.Println("\n淘宝商品id:"+rlt+"\n")
 		}
+	}*/
 	}
 	return rlt
 }
