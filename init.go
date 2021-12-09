@@ -59,6 +59,7 @@ var apikey=taobao.Get("apikey")
 
 //商品详情
 var title string=""
+var url string=""
 var reserve_price float64=0
 var zk_final_price float64=0
 var qh_final_price float64=0
@@ -128,41 +129,51 @@ func init() {
 }
 
 func getTaobao(info string) string{
-	fmt.Println(info+"\n")
+	var rlt=""
+	//fmt.Println(info+"\n")
 	shareUrl:=getShareUrl(info)//得到其中的链接
-	fmt.Println(shareUrl+"\n")
-	iids:=getIids(shareUrl)//得到商品原始链接
-	fmt.Println(iids+"\n")
+	//fmt.Println(shareUrl+"\n")
+	iids:=getIids(shareUrl)//得到商品原始链接中的商品ID
+	//fmt.Println(iids+"\n")
 	tbkLongUrl:=getTbkLongUrl(iids)//得到商品推广长链接
-	fmt.Println(tbkLongUrl+"\n")
+	//fmt.Println(tbkLongUrl+"\n")
 	tbkShortUrl:=getTbkShortUrl(tbkLongUrl)//得到商品推广短链接
-	fmt.Println(tbkShortUrl+"\n")
-	return title+
+	//非淘宝客商品时
+	if(tbkShortUrl!=""){		
+		rlt+=title+
 			"\n一口价："+strconv.FormatFloat(reserve_price,'g',5,32)+
-			"\n折扣价："+strconv.FormatFloat(zk_final_price,'g',5,32)+
-			"\n券后价："+strconv.FormatFloat(qh_final_price,'g',5,32)+
-			"\n抢购链接："+tbkShortUrl
+		    "\n折扣价："+strconv.FormatFloat(zk_final_price,'g',5,32)+
+		    "\n券后价："+strconv.FormatFloat(qh_final_price,'g',5,32)+
+			"\n惠购链接："+tbkShortUrl
+	}else{
+		rlt=title+"\n直购链接："+url
+	}
+	return rlt
 }
 
 /*
 获取分享到社交媒体中的链接
 */
 func getShareUrl(shareInfo string) string {
-		reg := regexp.MustCompile(`https?://m\.tb\.cn/h\.[\w]{7}\?sm=[\w]{6}`)
-		if reg != nil {
-			s := reg.FindStringSubmatch(shareInfo)
-			if len(s) > 0 {
-				fmt.Printf("\n分享到媒体中的原始链接："+s[0])
-				return s[0]
-			}
+	var rlt=""
+	reg := regexp.MustCompile(`(https?://m\.tb\.cn/h\.[\w]{7}\?sm=[\w]{6})(.+)`)
+	if reg != nil {
+		s := reg.FindStringSubmatch(shareInfo)
+		if len(s) > 2 {
+			fmt.Printf("\n分享到媒体中的原始链接："+s[0])
+			title=s[2]
+			url=s[1]
+			rlt=s[1]
 		}
-		return ""
+	}
+	return rlt
 }
 
 /*
 通过分享到媒体中的分享短链得到原始链接中的商品id
 */
 func getIids(shareUrl string) string {
+	var rlt=""
 	//检查分享链接
 	if (shareUrl==""){
 		return ""
@@ -182,14 +193,11 @@ func getIids(shareUrl string) string {
 			fmt.Println(param)
 		}
 		if(len(params)>2){
-			iids := params[2]
-			fmt.Println("\n淘宝商品id:"+iids+"\n")
-			if(iids!=""){
-				return iids
-			}
+			rlt= params[2]
+			fmt.Println("\n淘宝商品id:"+rlt+"\n")
 		}
 	}
-	return ""
+	return rlt
 }
 
 /*
@@ -197,17 +205,20 @@ func getIids(shareUrl string) string {
 */
 func getTbkLongUrl(iids string)string{
 	if(iids==""){return ""}
+	fmt.Println("进入长链转短链程序---------------"+iids)
 	//根据id获取长链接
 	req := httplib.Get("http://api.tbk.dingdanxia.com/tbk/id_privilege?"+
 					"apikey="+apikey+
 					"&id="+iids+
 					"&itemInfo=true")
-					//"&itemInfo=true")	
 	data, _:=req.Bytes()
-	fmt.Println("------\n"+string(data))
+	fmt.Println("-------------------------------\n"+string(data))
+	//itemURL, _ := jsonparser.GetString(data, "data","itemInfo","item_url")	
 	res := &Item{}
 	json.Unmarshal([]byte(data), &res)
-	title=res.Data.ItemInfo.Title
+	if(res.Data.ItemInfo.Title!=""){
+		title=res.Data.ItemInfo.Title
+	}
 	reserve_price=res.Data.ItemInfo.ReservePrice
 	zk_final_price=res.Data.ItemInfo.ZkFinalPrice
 	qh_final_price=res.Data.ItemInfo.QhFinalPrice
@@ -237,66 +248,3 @@ func dropErr(e error) {
 		panic(e)
 	}
 }
-
-/*
-//获取md5签名
-func getMd5Sign() string {
-	//对公共参数和业务参数按照ASCII排序
-    //不参加排序：app_secret和sign
-	//1.adzone_id
-	//2.app_key
-	3.fields
-	4.method
-	5.num_iids
-	7.sign_method   
-	8.timestamp  
-	9.v    
-
-	//将排序好的参数名和参数值拼装在一起
-	strCon:="adzone_id"+string(adzone_id)+
-			"app_key"+app_key+
-			"fields"+fields+
-			"method"+method+
-			"num_iids"+num_iids+
-			"sign_method"+sign_method+
-			"timestamp"+timestamp+
-			"v"+v
-	fmt.Println("拼接的字符串："+strCon)
-	//把拼装好的字符串采用utf-8编码，使用签名算法对编码后的字节流进行摘要。如果使用MD5算法，则需要在拼装的字符串前后加上app的secret后，再进行摘要，如：md5(secret+bar2foo1foo_bar3foobar4+secret)；如果使用HMAC_MD5算法，则需要用app的secret初始化摘要算法后，再进行摘要，如：hmac_md5(bar2foo1foo_bar3foobar4)。
-	strCon = app_secret + strCon + app_secret
-	fmt.Println("字符串两头加app_secret:"+strCon)
-	//将摘要得到的字节流结果使用十六进制表示，如：hex("helloworld".getBytes("utf-8")) = "68656C6C6F776F726C64"
-	str:=mahonia.ConvertString(strCon)
-	md5Rlt := Md5String(str)
-	return md5Rlt
-}
-
-func Md5String(data string) string{
-	md5:=md5.New()
-	md5.Write([]byte(data))
-	md5Data:=md5.Sum([]byte(nil))
-	return hex.EncodeToString(md5Data)
-}
-//
-func getConvert() string{
-	url:="http://gw.api.taobao.com/router/rest?"+
-	"method=taobao.tbk.item.convert"+
-	"&app_key="+app_key+
-	"&sign_method="+sign_method+
-	"&sign="+sign+
-	"&timestamp="+timestamp+
-	"&v="+v+
-	"&fields="+fields+
-	"&num_iids="+num_iids+
-	"&adzone_id="+adzone_id
-	fmt.Println("进入链接转换步骤,准备访问公共接口\n")
-	fmt.Println(url+"\n")
-	req := httplib.Get(url)	
-	data, err := req.Bytes()
-	if err != nil {
-		return `{}`
-	}
-	return string(data)
-}
-
-*/
