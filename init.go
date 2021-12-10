@@ -136,7 +136,7 @@ func init() {
 	core.AddCommand("", []core.Function{
 		{
 			//Rules: []string{"raw https?://mobile\\.yangkeduo\\.com/goods.?\\.html\\?goods_id=(\\d+)"},
-			Rules: []string{"raw https?://mobile\\.yangkeduo\\.com/goods.?\\.html"},
+			Rules: []string{"raw yangkeduo"},
 			Handle: func(s core.Sender) interface{} {
 				//fmt.Println(s.GetContent())
 				//查询是否绑定
