@@ -135,7 +135,8 @@ func init() {
 	//添加命令
 	core.AddCommand("", []core.Function{
 		{
-			Rules: []string{"raw https?://mobile\\.yangkeduo\\.com/goods.?\\.html\\?goods_id=(\\d+)"},
+			//Rules: []string{"raw https?://mobile\\.yangkeduo\\.com/goods.?\\.html\\?goods_id=(\\d+)"},
+			Rules: []string{"raw mobile\\.yangkeduo\\.com"},
 			Handle: func(s core.Sender) interface{} {
 				//fmt.Println(s.GetContent())
 				//查询是否绑定
@@ -212,15 +213,18 @@ func getPinduoduo(info string) string{
 	}
 	//从返回的数据中提取出商品id
 	var source_url=""
-	reg = regexp.MustCompile(`https?://mobile\.yangkeduo\.com/goods.?\.html\?goods_id=(\d+)`)
+	//reg = regexp.MustCompile(`https?://mobile\.yangkeduo\.com/goods.?\.html\?goods_id=(\d+)`)
+	reg = regexp.MustCompile(`goods_id=(\d+)`)
 	if reg != nil {
-		params := reg.FindStringSubmatch(string(info))
-		source_url = params[0]
-		fmt.Println("链接:"+source_url+"\n")
-		goods_id:=params[1]		
-		//通过goods_id获取goods_sign
-		goods_details =getGoodsDetails(goods_id)
-		//fmt.Println("\n商品goods_sign:"+goods_sign+"\n")		
+			params := reg.FindStringSubmatch(string(info))
+			if(len(params)>=2){
+			source_url = "https://mobile.yangkeduo.com/goods.html?goods_id="+params[1]
+			fmt.Println("链接:"+source_url+"\n")
+			goods_id:=params[1]		
+			//通过goods_id获取goods_sign
+			goods_details =getGoodsDetails(goods_id)
+			//fmt.Println("\n商品goods_sign:"+goods_sign+"\n")		
+		}
 	}
 	short_url:=""
 	if (goods_details!=""){
@@ -265,24 +269,28 @@ func getGoodsDetails(goods_id string)string{
 
 //获取短链接
 func getShortUrl(source_url string) string {
-	//对公共参数和业务参数按照ASCII排序,不参加排序：app_secret和sign
-	params :=map[string]string {
-		"type":		"pdd.ddk.goods.zs.unit.url.gen",
-		"client_id": 	pinduoduo.Get("client_id"),
-		"pid":			pinduoduo.Get("pid"),
-		"timestamp":	strconv.FormatInt(time.Now().Unix(),10),
-		"source_url":	source_url,
-	}
-	client_key=pinduoduo.Get("client_key")
-	//MD5
-	upMd5:=getMd5(client_key,params)
-	//将长链接变换成短链接
-	data:=accessApi(pddSite,params,upMd5)
-	fmt.Println("getShortUrl中得到的接口返回值："+string(data))
-	res:=&ItemUrl{}
-	json.Unmarshal([]byte(data),&res)
-	//fmt.Println(res.GoodsZsUnitGenerateResponse.ShortUrl)
-	return string(res.GoodsZsUnitGenerateResponse.ShortURL)
+	var rlt=""
+	if(source_url!=""){
+		//对公共参数和业务参数按照ASCII排序,不参加排序：app_secret和sign
+		params :=map[string]string {
+			"type":		"pdd.ddk.goods.zs.unit.url.gen",
+			"client_id": 	pinduoduo.Get("client_id"),
+			"pid":			pinduoduo.Get("pid"),
+			"timestamp":	strconv.FormatInt(time.Now().Unix(),10),
+			"source_url":	source_url,
+		}
+		client_key=pinduoduo.Get("client_key")
+		//MD5
+		upMd5:=getMd5(client_key,params)
+		//将长链接变换成短链接
+		data:=accessApi(pddSite,params,upMd5)
+		fmt.Println("getShortUrl中得到的接口返回值："+string(data))
+		res:=&ItemUrl{}
+		json.Unmarshal([]byte(data),&res)
+		//fmt.Println(res.GoodsZsUnitGenerateResponse.ShortUrl)
+		rlt = string(res.GoodsZsUnitGenerateResponse.ShortURL)
+	} 
+	return rlt
 }
 
 //访问接口
