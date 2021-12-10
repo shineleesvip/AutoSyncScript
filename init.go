@@ -135,7 +135,8 @@ func init() {
 	//添加命令
 	core.AddCommand("", []core.Function{
 		{
-			Rules: []string{"raw https?://mobile\\.yangkeduo\\.com/goods.?\\.html\\?goods_id=(\\d+)"},
+			//Rules: []string{"raw https?://mobile\\.yangkeduo\\.com/goods.?\\.html\\?goods_id=(\\d+)"},
+			Rules: []string{"raw https?://mobile\\.yangkeduo\\.com/goods.?\\.html"},
 			Handle: func(s core.Sender) interface{} {
 				//fmt.Println(s.GetContent())
 				//查询是否绑定
@@ -212,7 +213,7 @@ func getPinduoduo(info string) string{
 	}
 	//从返回的数据中提取出商品id
 	var source_url=""
-	reg = regexp.MustCompile(`https?://mobile\.yangkeduo\.com/goods.?\.html\?goods_id=(\d+)`)
+	reg = regexp.MustCompile(`id=(\d+)`)
 	if reg != nil {
 		params := reg.FindStringSubmatch(string(info))
 		source_url = params[0]
