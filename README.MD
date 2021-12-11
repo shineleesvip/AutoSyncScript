@@ -12,11 +12,11 @@ you will get jd_union_id
 3
 Use the Commands below:
 
-set fanli jingpinku_appid XXX
+set jingdong jingpinku_appid XXX
 
-set fanli jingpinku_appkey XXX
+set jingdong jingpinku_appkey XXX
 
-set fanli jd_union_id XXX
+set jingdong jd_union_id XXX
 
 4.buy me a cup of coffee
 
