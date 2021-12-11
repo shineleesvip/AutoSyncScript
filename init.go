@@ -183,11 +183,11 @@ func queryBind() bool{
 	//对公共参数和业务参数按照ASCII排序,不参加排序：app_secret和sign
 	params:=map[string]string{
 		"type":"pdd.ddk.member.authority.query",
-		"client_id":pinduoduo.Get("client_id"),
-		"pid":pinduoduo.Get("pid"),
+		"client_id":client_id,
+		"pid":pid,
    		"timestamp": strconv.FormatInt(time.Now().Unix(),10),
 	}
-	client_key:=pinduoduo.Get("client_key")
+	//client_key:=pinduoduo.Get("client_key")
    	//大写(MD5(client_secret+key1+value1+key2+value2+client_secret))
    	//将排序好的参数名和参数值拼装在一起，两头加client_key
    	sign:=getMd5(client_key,params)
@@ -203,14 +203,14 @@ func setBind() string{
 	//对公共参数和业务参数按照ASCII排序,不参加排序：app_secret和sign
 	params:=map[string]string{
 		"type": 		"pdd.ddk.rp.prom.url.generate",
-		"client_id": 	pinduoduo.Get("client_id"),
-		"p_id_list": 	"[\""+pinduoduo.Get("pid")+"\"]",
+		"client_id": 	client_id,
+		"p_id_list": 	"[\""+pid+"\"]",
 		//"p_id_list": 	"%5B%22"+pinduoduo.Get("pid")+"%22%5D",
 		"data_type":    "JSON",
 		"channel_type": "10",
 		"timestamp": strconv.FormatInt(time.Now().Unix(),10),
 	}
-	client_key:=pinduoduo.Get("client_key")
+	//client_key:=pinduoduo.Get("client_key")
    	//大写(MD5(client_secret+key1+value1+key2+value2+client_secret))
    	sign:=getMd5(client_key,params)
 	fmt.Println("------------------------------------------------------------")
@@ -262,12 +262,12 @@ func getPinduoduo(info string) string{
 func getGoodsDetails(goods_id string)string{
 	params :=map[string]string {
 		"type":"pdd.ddk.goods.search",
-		"client_id":pinduoduo.Get("client_id"),
-		"pid": pinduoduo.Get("pid"),
+		"client_id": client_id,
+		"pid": pid,
 		"timestamp":strconv.FormatInt(time.Now().Unix(),10),
 		"keyword": goods_id,
 	}
-	client_key=pinduoduo.Get("client_key")
+	//client_key=pinduoduo.Get("client_key")
 	upMd5:=getMd5(client_key,params)
 	//将长链接变换成短链接
 	data := accessApi(pddSite,params,upMd5)
@@ -297,12 +297,12 @@ func getShortUrl(source_url string) string {
 		//对公共参数和业务参数按照ASCII排序,不参加排序：app_secret和sign
 		params :=map[string]string {
 			"type":		"pdd.ddk.goods.zs.unit.url.gen",
-			"client_id": 	pinduoduo.Get("client_id"),
-			"pid":			pinduoduo.Get("pid"),
+			"client_id": 	client_id,
+			"pid":			pid,
 			"timestamp":	strconv.FormatInt(time.Now().Unix(),10),
 			"source_url":	source_url,
 		}
-		client_key=pinduoduo.Get("client_key")
+		//client_key=pinduoduo.Get("client_key")
 		//MD5
 		upMd5:=getMd5(client_key,params)
 		//将长链接变换成短链接
