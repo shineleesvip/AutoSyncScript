@@ -201,27 +201,35 @@ func queryBind() bool{
 
 func setBind() string{
 	//对公共参数和业务参数按照ASCII排序,不参加排序：app_secret和sign
-	params:=map[string]string{
-		"type": 		"pdd.ddk.rp.prom.url.generate",
-		"client_id": 	client_id,
-		"p_id_list": 	"[\""+pid+"\"]",
-		//"p_id_list": 	"%5B%22"+pinduoduo.Get("pid")+"%22%5D",
-		"data_type":    "JSON",
-		"channel_type": "10",
-		"timestamp": strconv.FormatInt(time.Now().Unix(),10),
+	if(client_id!=""&&client_key!=""&&pid!=""){
+		params:=map[string]string{
+			"type": 		"pdd.ddk.rp.prom.url.generate",
+			"client_id": 	client_id,
+			"p_id_list": 	"[\""+pid+"\"]",
+			//"p_id_list": 	"%5B%22"+pinduoduo.Get("pid")+"%22%5D",
+			"data_type":    "JSON",
+			"channel_type": "10",
+			"timestamp": strconv.FormatInt(time.Now().Unix(),10),
+		}
+		//client_key:=pinduoduo.Get("client_key")
+		//大写(MD5(client_secret+key1+value1+key2+value2+client_secret))
+		sign:=getMd5(client_key,params)
+		fmt.Println("------------------------------------------------------------")
+		fmt.Println("sign:"+sign)
+		//params["p_id_list"]="%5B%22"+pinduoduo.Get("pid")+"%22%5D"
+		data:=accessApi(pddSite,params,sign)
+		//fmt.Println("绑定返回值："+string(data))
+		res := &UrlBind{}
+		json.Unmarshal(data, &res)
+		fmt.Println("------------------------------------------------------------")
+		if ( len(res.RpPromotionURLGenerateResponse.URLList)>=1 ){
+			return string(res.RpPromotionURLGenerateResponse.URLList[0].MobileURL)
+		}else{
+			return "自动授权备案失败，请手动授权备案https://open.pinduoduo.com/application/document/apiTools?scopeName=pdd.ddk.rp.prom.url.generate"
+		}
+	}else {
+		return "缺少必要的设置client_id、client_key、pid"
 	}
-	//client_key:=pinduoduo.Get("client_key")
-   	//大写(MD5(client_secret+key1+value1+key2+value2+client_secret))
-   	sign:=getMd5(client_key,params)
-	fmt.Println("------------------------------------------------------------")
-	fmt.Println("sign:"+sign)
-	//params["p_id_list"]="%5B%22"+pinduoduo.Get("pid")+"%22%5D"
-	data:=accessApi(pddSite,params,sign)
-	//fmt.Println("绑定返回值："+string(data))
-	res := &UrlBind{}
-	json.Unmarshal(data, &res)
-	fmt.Println("------------------------------------------------------------")
-	return string(res.RpPromotionURLGenerateResponse.URLList[0].MobileURL)
 }
 
 func getPinduoduo(info string) string{
