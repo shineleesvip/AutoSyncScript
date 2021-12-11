@@ -23,10 +23,10 @@ import (
 
 var pinduoduo = core.NewBucket("pinduoduo")
 //拼多多
-var pddSite="https://gw-api.pinduoduo.com/api/router"
-var apitype ="pdd.ddk.goods.zs.unit.url.gen"
+var pddSite = "https://gw-api.pinduoduo.com/api/router"
+var apitype = ""
 var client_id=""
-var client_key=pinduoduo.Get("client_key")
+var client_key=""
 var pid=""
 var timestamp=""
 //是否完成推广位的媒体id的绑定
@@ -138,17 +138,40 @@ func init() {
 			//Rules: []string{"raw https?://mobile\\.yangkeduo\\.com/goods.?\\.html\\?goods_id=(\\d+)"},
 			Rules: []string{"raw mobile\\.yangkeduo\\.com"},
 			Handle: func(s core.Sender) interface{} {
-				//fmt.Println(s.GetContent())
-				//查询是否绑定
+				var resMessage=""
+				//获取必要信息
+				client_id = pinduoduo.Get("client_id")
+				client_key = pinduoduo.Get("client_key")
+				pid = pinduoduo.Get("pid")
+				bind = (pinduoduo.Get("bind")=="true")
+				//发送信息的是管理员
 				if(s.IsAdmin()){
-					bind=queryBind()
-					fmt.Sprintf("绑定结果："+strconv.FormatBool(bind))
-					if(!bind){
-						return "点击链接授权备案:\n"+setBind()
+					if(bind){//完成授权备案的
+						if(client_id!="" && client_key!="" && pid!=""){//设置了必要参数的
+							resMessage=getPinduoduo(s.GetContent())
+						}else{//没设置必要参数
+							resMessage="请设置client_id、client_key、pid必要信息"
+						}
+					}else {//未完成授权备案的
+						bind=queryBind()
+						//bind=false
+						pinduoduo.Set("bind",strconv.FormatBool(bind))
+						fmt.Sprintf("绑定结果："+strconv.FormatBool(bind))
+						if(!bind){
+							resMessage= "点击链接授权备案:\n"+setBind()
+						}else{
+							//fmt.
+							resMessage=getPinduoduo(s.GetContent())
+						}
+					}
+				}else{//发送信息的不是管理员
+					if(client_key!=""&&client_id!=""&&pid!=""&&bind){
+						resMessage=getPinduoduo(s.GetContent())
+					}else{
+						resMessage=""
 					}
 				}
-				pinduoduo.Set("bind",bind)
-				return getPinduoduo(s.GetContent())
+				return resMessage
 			},
 		},
 	})
