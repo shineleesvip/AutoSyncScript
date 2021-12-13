@@ -28,6 +28,7 @@ func init() {
 				"raw https?://.+\\.jd\\.[comhk]{2,3}/(\\d+).html",
 				"raw https?://item\\.m\\.jd\\.[comhk]{2,3}/(\\d+).html",
 				"raw https?://m\\.jingxi\\.[comhk]{2,3}/item/jxview\\?sku=(\\d+)",
+				"raw https?://m\\.jingxi\\.[comhk]{2,3}/item/view\\?sku=(\\d+)",
 				"raw https?://m\\.jingxi\\.[comhk]{2,3}.+sku=(\\d+)",
 				"raw https?://kpl\\.m\\.jd\\.[comhk]{2,3}/product\\?wareId=(\\d+)",
 				"raw https?://wq\\.jd\\.[comhk]{2,3}/item/view\\?sku=(\\d+)",
