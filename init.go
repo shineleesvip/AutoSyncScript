@@ -113,6 +113,6 @@ func getFanli(url string) string {
 		"final":    final,
 		"image":    image,
 	})*/
-	var rslt string = title + "\n京东价：" + price + "\n促销价：" + final + "\n惠购链接" + short
+	var rslt string = title + "\n京东价：" + price + "\n促销价：" + final + "\n惠购链接：" + short
 	return string(rslt)
 }
