@@ -156,14 +156,20 @@ func getTaobao(info string) string{
 */
 func getShareUrl(shareInfo string) string {
 	var rlt=""
-	reg := regexp.MustCompile(`(https?://m\.tb\.cn/h\.[\w]{7}\?sm=[\w]{6})(.+)`)
+	title=""
+	url=""
+	reg := regexp.MustCompile(`(.*)(https?://m\.tb\.cn/h\.[\w]{7}\?sm=[\w]{6})(.*)`)
 	if reg != nil {
 		s := reg.FindStringSubmatch(shareInfo)
-		if len(s) > 2 {
+		fmt.Println("\n以下为循环输出s:\n")
+		for _, param:=range s{
+			fmt.Println(param)
+		}
+		if len(s) > 3 {
 			fmt.Printf("\n分享到媒体中的原始链接："+s[0])
-			title=s[2]
-			url=s[1]
-			rlt=s[1]
+			title=s[3]
+			url=s[2]
+			rlt=s[2]
 		}
 	}
 	return rlt
