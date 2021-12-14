@@ -23,7 +23,7 @@ func init() {
 
 	//向core包中添加命令
 	core.AddCommand("", []core.Function{
-		{
+		{//"https:\\/\\/item.m.jd.com\\/product\\/100022622786.html
 			Rules: []string{"raw https?://item\\.m\\.jd\\.[comhk]{2,3}/product/(\\d+).html",
 				"raw https?:\\\\\\/\\\\\\/item\\.m\\.jd\\.[comhk]{2,3}\\\\\\/product\\\\\\/(\\d+).html",
 				"raw https?://.+\\.jd\\.[comhk]{2,3}/(\\d+).html",
@@ -36,7 +36,7 @@ func init() {
 				"raw https?:\\\\\\/\\\\\\/m\\.jingxi\\.[comhk]{2,3}\\\\\\/item\\\\\\/view\\?sku=(\\d+)",
 				"raw https?://m\\.jingxi\\.[comhk]{2,3}.+sku=(\\d+)",
 				"raw https?:\\\\\\/\\\\\\/m\\.jingxi\\.[comhk]{2,3}.+sku=(\\d+)",
-				"raw https?://kpl\\.m\\.jd\\.[comhk]{2,3}/product\\?wareId=(\\d+)",
+				"raw https?://kpl\\.m\\.jd\\.[comhk]{2,3cde}/product\\?wareId=(\\d+)",
 				"raw https?:\\\\\\/\\\\\\/kpl\\.m\\.jd\\.[comhk]{2,3cde}\\\\\\/product\\?wareId=(\\d+)",
 				"raw https?://wq\\.jd\\.[comhk]{2,3}/item/view\\?sku=(\\d+)",
 				"raw https?:\\\\\\/\\\\\\/wq\\.jd\\.[comhk]{2,3}\\\\\\/item\\\\\\/view\\?sku=(\\d+)",
@@ -46,9 +46,10 @@ func init() {
 				"raw https?:\\\\\\/\\\\\\/.+\\.jd\\.[comhk]{2,3}.+sku=(\\d+)",
 				"raw https?://.+jd\\.[comhk]{2,3}/product/(\\d+).html",
 				"raw https?:\\\\\\/\\\\\\/.+jd\\.[comhk]{2,3}\\\\\\/product/(\\d+).html",
-				"raw https?://u\\.jd\\.com/\\w{7}",
-				"raw https?:\\\\\\/\\\\\\/u\\.jd\\.com\\\\\\/\\w{7}"},
+				"raw https?://u\\.jd\\.com/(\\w{7})",
+				"raw https?:\\\\\\/\\\\\\/u\\.jd\\.com\\\\\\/(\\w{7})"},
 			Handle: func(s core.Sender) interface{} {
+				//fmt.Println(s.Get())
 				return getFanli(s.Get())
 			},
 		},
@@ -58,21 +59,25 @@ func init() {
 
 func getFanli(url string) string {
 	sku := core.Int(url) //从字符串中获取包含的int型数据
-	if sku == 0 {
-		return ``
+	var content string=""
+	if sku != 0 {
+		content=fmt.Sprintf("https://item.jd.com/%d.html", sku)
+	}else{
+		content="https://u.jd.com/"+url
 	}
 	req := httplib.Get("https://api.jingpinku.com/get_rebate_link/api?" +
 		"appid=" + jingdong.Get("jingpinku_appid") +
 		"&appkey=" + jingdong.Get("jingpinku_appkey") +
 		"&union_id=" + jingdong.Get("jd_union_id") +
-		"&content=" + fmt.Sprintf("https://item.jd.com/%d.html", sku))
+		"&content=" + content)
 	data, err := req.Bytes()
-	if err != nil {
-		return ``
-	}
+	
+	dropErr(err)
+
 	fmt.Println("---------------------------------------------------------")
 	fmt.Println(string(data))
 	fmt.Println("---------------------------------------------------------")
+
 	short, _ := jsonparser.GetString(data, "content")
 	code, _ := jsonparser.GetInt(data, "code")
 	if code != 0 {
@@ -111,7 +116,7 @@ func getFanli(url string) string {
 			"appid=" + jingdong.Get("jingpinku_appid") +
 			"&appkey=" + jingdong.Get("jingpinku_appkey") +
 			"&union_id=" + jingdong.Get("jd_union_id") +
-			"&content=" + fmt.Sprintf("https://item.jd.com/%d.html", sku))
+			"&content=" + content)
 		data, _ := req.Bytes()
 		quan, _ := jsonparser.GetString(data, "content")
 		if strings.Contains(quan, "https://u.jd.com") {
@@ -126,6 +131,13 @@ func getFanli(url string) string {
 		"final":    final,
 		"image":    image,
 	})*/
-	var rslt string = title + "\n京东价：" + price + "\n促销价：" + final + "\n惠购链接：" + short
+    var rslt string=title+"\n京东价："+price+"\n促销价："+final+"\n惠链接："+short
 	return string(rslt)
+}
+
+// 创建一个错误处理函数，避免过多的 if err != nil{} 出现
+func dropErr(e error) {
+	if e != nil {
+		panic(e)
+	}
 }
