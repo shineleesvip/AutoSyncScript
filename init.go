@@ -157,11 +157,13 @@ func init() {
 						//bind=false
 						pinduoduo.Set("bind",strconv.FormatBool(bind))
 						fmt.Sprintf("绑定结果："+strconv.FormatBool(bind))
-						if(!bind){
+						
+						if (!bind && client_id!="" && client_key!="" && pid!=""){
 							resMessage= "点击链接授权备案:\n"+setBind()
-						}else{
-							//fmt.
+						}else if (bind && client_id!="" && client_key!="" && pid!=""){
 							resMessage=getPinduoduo(s.GetContent())
+						}else{
+							resMessage="请设置client_id、client_key、pid必要信息"
 						}
 					}
 				}else{//发送信息的不是管理员
@@ -259,9 +261,9 @@ func getPinduoduo(info string) string{
 	}
 	short_url:=""
 	if (goods_details!=""){
-		short_url = goods_details +"\n惠购链接"+getShortUrl(source_url)
+		short_url = goods_details +"\n惠购链接："+getShortUrl(source_url)
 	}else{
-		short_url = goodTitle + "\n惠购链接"+getShortUrl(source_url)
+		short_url = goodTitle + "\n惠购链接："+getShortUrl(source_url)
 	}
 	return short_url
 }
