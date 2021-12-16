@@ -154,8 +154,6 @@ func getTaobao(info string) string{
 		    "\n折扣价："+strconv.FormatFloat(zk_final_price,'g',5,32)+
 		    "\n券后价："+strconv.FormatFloat(qh_final_price,'g',5,32)+
 			"\n惠购链接："+tbkShortUrl
-	}else{
-		rlt=title+"\n直购链接："+url
 	}
 	return rlt
 }
