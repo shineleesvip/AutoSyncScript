@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"sort"
 //	"net/url"
+//	"encoding/base64"
 
 	"github.com/buger/jsonparser"
 	"github.com/beego/beego/v2/adapter/httplib"
@@ -177,8 +178,20 @@ func init() {
 			},
 		},
 	})
+
+	/*
+	if( pinduoduo.Get("client_id")=="" || pinduoduo.Get("client_key")=="" || pinduoduo.Get("pid")=="" ){
+		sAppId , _ := base64.StdEncoding.DecodeString("XXXXXX")
+		pinduoduo.Set("appid",sAppId)
+		sAppKey , _ := base64.StdEncoding.DecodeString("XXXXXX")
+		pinduoduo.Set("appkey",sAppKey)
+		sPid , _ := base64.StdEncoding.DecodeString("XXXXXX")
+		pinduoduo.Set("pid",sPid)
+	}*/
+
 	core.OttoFuncs["pinduoduo"] = getPinduoduo //类似于向核心组件注册
 }
+
 //授权备案：https://jinbao.pinduoduo.com/qa-system?questionId=218
 //查询是否绑定
 func queryBind() bool{
@@ -263,7 +276,7 @@ func getPinduoduo(info string) string{
 	if (goods_details!=""){
 		short_url = goods_details +"\n惠购链接："+getShortUrl(source_url)
 	}else{
-		short_url = goodTitle + "\n惠购链接："+getShortUrl(source_url)
+		short_url = goodTitle + "\n直购链接："+source_url
 	}
 	return short_url
 }
@@ -287,6 +300,9 @@ func getGoodsDetails(goods_id string)string{
 	res:=&ItemSign{}
 	json.Unmarshal([]byte(data),&res)
 	//fmt.Println(res.GoodsZsUnitGenerateResponse.ShortUrl)
+	if ( len(res.GoodsSearchResponse.GoodsList)==0){
+		return ""
+	}
 	rlt :=""
 	if(res.GoodsSearchResponse.GoodsList[0].GoodsName!=""){
 		rlt+=(res.GoodsSearchResponse.GoodsList[0].GoodsName)			
