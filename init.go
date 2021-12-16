@@ -137,6 +137,8 @@ func init() {
 
 func getTaobao(info string) string{
 	var rlt=""
+	title=""
+	url=""
 	//fmt.Println(info+"\n")
 	//shareUrl:=getShareUrl(info)//得到其中的链接
 	//fmt.Println(shareUrl+"\n")
