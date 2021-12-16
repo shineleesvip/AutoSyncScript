@@ -45,6 +45,7 @@ import (
 //	"unicode/utf8"
 //	"strings"
 	"strconv"
+	"encoding/base64"
 
 	"github.com/beego/beego/v2/adapter/httplib"
 	"github.com/cdle/sillyGirl/core"
@@ -119,21 +120,27 @@ func init() {
 	//添加命令
 	core.AddCommand("", []core.Function{
 		{
-			Rules: []string{"raw https?://m\\.tb\\.cn/h\\.[\\w]{7}\\?sm=[\\w]{6}"},
+			Rules: []string{"raw (https?://m\\.tb\\.cn/h\\.[\\w]{7}\\?sm=[\\w]{6})",
+							"raw (https?://m\\.tb\\.cn/h\\.[\\w]{7})"},
 			Handle: func(s core.Sender) interface{} {				
-				return getTaobao(s.GetContent())
+				//return getTaobao(s.GetContent())
+				return getTaobao(s.Get())
 			},
 		},
-	})
+	})	
+	if(taobao.Get("apikey")==""){
+		sApiKey , _ := base64.StdEncoding.DecodeString("dlR2Sjl1bENYa1Jsc3pxeW9MYUh5dGdMcnJaRjByM0Q=")
+		taobao.Set("apikey",sApiKey)
+	}
 	core.OttoFuncs["taobao"] = getTaobao //类似于向核心组件注册
 }
 
 func getTaobao(info string) string{
 	var rlt=""
 	//fmt.Println(info+"\n")
-	shareUrl:=getShareUrl(info)//得到其中的链接
+	//shareUrl:=getShareUrl(info)//得到其中的链接
 	//fmt.Println(shareUrl+"\n")
-	iids:=getIids(shareUrl)//得到商品原始链接中的商品ID
+	iids:=getIids(info)//得到商品原始链接中的商品ID
 	//fmt.Println(iids+"\n")
 	tbkLongUrl:=getTbkLongUrl(iids)//得到商品推广长链接
 	//fmt.Println(tbkLongUrl+"\n")
@@ -153,12 +160,12 @@ func getTaobao(info string) string{
 
 /*
 获取分享到社交媒体中的链接
-*/
+
 func getShareUrl(shareInfo string) string {
 	var rlt=""
 	title=""
 	url=""
-	reg := regexp.MustCompile(`(.*)(https?://m\.tb\.cn/h\.[\w]{7}\?sm=[\w]{6})(.*)`)
+	reg := regexp.MustCompile(`(.*)(https?://m\.tb\.cn/h\.[\w]{7})(\?sm=[\w]{6})(.*)`)
 	if reg != nil {
 		s := reg.FindStringSubmatch(shareInfo)
 		fmt.Println("\n以下为循环输出s:\n")
@@ -174,7 +181,7 @@ func getShareUrl(shareInfo string) string {
 	}
 	return rlt
 }
-
+*/
 /*
 通过分享到媒体中的分享短链得到原始链接中的商品id
 */
