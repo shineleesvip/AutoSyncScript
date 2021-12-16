@@ -153,7 +153,7 @@ func getTaobao(info string) string{
 			"\n一口价："+strconv.FormatFloat(reserve_price,'g',5,32)+
 		    "\n折扣价："+strconv.FormatFloat(zk_final_price,'g',5,32)+
 		    "\n券后价："+strconv.FormatFloat(qh_final_price,'g',5,32)+
-			"\n惠购链接："+tbkShortUrl
+			"\n惠链接："+tbkShortUrl
 	}
 	return rlt
 }
