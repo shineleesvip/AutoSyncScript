@@ -100,7 +100,7 @@ func getFanli(url string) string {
 		}
 	}
 	official = strings.Trim(official, "\n")
-	//image, _ := jsonparser.GetString(data, "images", "[0]")
+	image, _ := jsonparser.GetString(data, "images", "[0]")
 	var price string = ""
 	var final string = ""
 	if res := regexp.MustCompile(`京东价：(.*)\n`).FindStringSubmatch(official); len(res) > 0 {
