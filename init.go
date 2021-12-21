@@ -36,7 +36,7 @@ func init() {
 				"raw https?:\\\\\\/\\\\\\/m\\.jingxi\\.[comhk]{2,3}\\\\\\/item\\\\\\/view\\?sku=(\\d+)",
 				"raw https?://m\\.jingxi\\.[comhk]{2,3}.+sku=(\\d+)",
 				"raw https?:\\\\\\/\\\\\\/m\\.jingxi\\.[comhk]{2,3}.+sku=(\\d+)",
-				"raw https?://kpl\\.m\\.jd\\.[comhk]{2,3cde}/product\\?wareId=(\\d+)",
+				"raw https?://kpl\\.m\\.jd\\.[comhk]{2,3}/product\\?wareId=(\\d+)",
 				"raw https?:\\\\\\/\\\\\\/kpl\\.m\\.jd\\.[comhk]{2,3}\\\\\\/product\\?wareId=(\\d+)",
 				"raw https?://wq\\.jd\\.[comhk]{2,3}/item/view\\?sku=(\\d+)",
 				"raw https?:\\\\\\/\\\\\\/wq\\.jd\\.[comhk]{2,3}\\\\\\/item\\\\\\/view\\?sku=(\\d+)",
