@@ -1,0 +1,34 @@
+name: fanli 
+on:
+  schedule:
+    - cron: '35 */12 * * *'
+  workflow_dispatch:
+  watch:
+    types: started
+  repository_dispatch:
+    types: sync-fanli
+jobs:
+  repo-sync:
+    env:
+      PAT: ${{ secrets.PAT }} 
+    runs-on: ubuntu-latest
+    if: github.event.repository.owner.id == github.event.sender.id
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+
+      - name: sync fanli_jd
+        uses: repo-sync/github-sync@v2
+        if: env.PAT
+        with:
+          source_repo: "https://github.com/hdbjlizhe/fanli_jd.git"
+          source_branch: "main"
+          destination_branch: "fanli_jd"
+          source_repo: "https://github.com/hdbjlizhe/fanli_tb.git"
+          source_branch: "main"
+          destination_branch: "fanli_tb"
+          source_repo: "https://github.com/hdbjlizhe/fanli_pdd.git"
+          source_branch: "main"
+          destination_branch: "fanli_pdd"    
+          github_token: ${{ secrets.PAT }}
