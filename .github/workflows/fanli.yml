@@ -17,10 +17,8 @@ jobs:
       - uses: actions/checkout@v2
         with:
           persist-credentials: false
-
       - name: sync fanli_jd
         uses: repo-sync/github-sync@v2
-        if: env.PAT
         with:
           source_repo: "https://github.com/hdbjlizhe/fanli_jd.git"
           source_branch: "main"
