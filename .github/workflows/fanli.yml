@@ -23,6 +23,7 @@ jobs:
           source_repo: "https://github.com/hdbjlizhe/fanli_jd.git"
           source_branch: "main"
           destination_branch: "fanli_jd"
+          github_token: ${{ secrets.PAT }}
       - name: sync fanli_tb
         uses: repo-sync/github-sync@v2
         if: env.PAT          
@@ -30,6 +31,7 @@ jobs:
           source_repo: "https://github.com/hdbjlizhe/fanli_tb.git"
           source_branch: "main"
           destination_branch: "fanli_tb"
+          github_token: ${{ secrets.PAT }}
       - name: sync fanli_pdd
         uses: repo-sync/github-sync@v2
         if: env.PAT
