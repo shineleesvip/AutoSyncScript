@@ -1,4 +1,4 @@
-# pdd_fanli   交流群：qq418353744
+# pdd_fanli   交流群：418353744 线报群：263723430
 Third party extension interface for sillyGirl
 按照sillyGirl的源码，自己拼凑了一个扩展插件，方便在pdd上获取推广佣金。
 
