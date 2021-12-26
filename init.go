@@ -64,6 +64,9 @@ var url string=""
 var reserve_price float64=0
 var zk_final_price float64=0
 var qh_final_price float64=0
+var coupon string=""
+var coupon_tpwd string=""
+var item_tpwd string=""
 
 //淘宝商品结构体
 type Item struct {
@@ -98,6 +101,8 @@ type Item struct {
 			Nick              string  `json:"nick"`
 			MaterialLibType   string  `json:"material_lib_type"`
 		} `json:"itemInfo"`
+		CouponTpwd			string 		`json:"coupon_tpwd"`
+		ItemTpwd			string 		`json:"item_tpwd"`
 	} `json:"data"`
 }
 
@@ -146,14 +151,17 @@ func getTaobao(info string) string{
 	//fmt.Println(iids+"\n")
 	tbkLongUrl:=getTbkLongUrl(iids)//得到商品推广长链接
 	//fmt.Println(tbkLongUrl+"\n")
-	tbkShortUrl:=getTbkShortUrl(tbkLongUrl)//得到商品推广短链接
+	//tbkShortUrl:=getTbkShortUrl(tbkLongUrl)//得到商品推广短链接
 	//非淘宝客商品时
-	if(tbkShortUrl!=""){		
+	if(tbkLongUrl!=""){		
 		rlt+=title+
 			"\n一口价："+strconv.FormatFloat(reserve_price,'g',5,32)+
 		    "\n折扣价："+strconv.FormatFloat(zk_final_price,'g',5,32)+
 		    "\n券后价："+strconv.FormatFloat(qh_final_price,'g',5,32)+
-			"\n惠链接："+tbkShortUrl
+			"\n券口令："+coupon_tpwd+
+			"\n淘口令："+item_tpwd+
+			"\n优惠券："+coupon+
+			"\n惠链接："+tbkLongUrl
 	}
 	return rlt
 }
@@ -244,7 +252,9 @@ func getTbkLongUrl(iids string)string{
 	req := httplib.Get("http://api.tbk.dingdanxia.com/tbk/id_privilege?"+
 					"apikey="+apikey+
 					"&id="+iids+
-					"&itemInfo=true")
+					"&itemInfo=true"+
+					"&shorturl=true"+
+					"&tpwd=true")
 	data, _:=req.Bytes()
 	fmt.Println("-------------------------------\n"+string(data))
 	//itemURL, _ := jsonparser.GetString(data, "data","itemInfo","item_url")	
@@ -256,13 +266,16 @@ func getTbkLongUrl(iids string)string{
 	reserve_price=res.Data.ItemInfo.ReservePrice
 	zk_final_price=res.Data.ItemInfo.ZkFinalPrice
 	qh_final_price=res.Data.ItemInfo.QhFinalPrice
+	coupon=res.Data.CouponClickURL
+	coupon_tpwd=res.Data.CouponTpwd
+	item_tpwd=res.Data.ItemTpwd
 	//fmt.Println(res.Data.ItemURL)
 	return res.Data.ItemURL	
 }
 
 /*
 将淘宝客推广长链接获取推广短链接
-*/
+
 func getTbkShortUrl(url string)string{
 	if(url==""){return ""}
 	//将长链接变换成短链接
@@ -274,7 +287,7 @@ func getTbkShortUrl(url string)string{
 	res:=&ShortUrl{}
 	json.Unmarshal([]byte(data),&res)
 	return res.Data.Content
-}
+}*/
 
 // 创建一个错误处理函数，避免过多的 if err != nil{} 出现
 func dropErr(e error) {
