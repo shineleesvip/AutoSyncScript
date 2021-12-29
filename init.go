@@ -21,6 +21,7 @@ import (
 	"github.com/beego/beego/v2/adapter/httplib"
 	"github.com/cdle/sillyGirl/core"
 	"github.com/gin-gonic/gin"
+	"github.com/beego/beego/v2/core/logs"
 
 )
 
@@ -179,6 +180,7 @@ func init() {
 		},
 	})
 	core.OttoFuncs["pinduoduo"] = getPinduoduo 
+	logs.Info("淘宝佣金短链启动：关注QQ群418353744获取更多消息")
 }
 
 
