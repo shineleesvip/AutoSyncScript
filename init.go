@@ -14,6 +14,7 @@ import (
 	"github.com/buger/jsonparser"
 	"github.com/cdle/sillyGirl/core"
 	"github.com/gin-gonic/gin"
+	"github.com/beego/beego/v2/core/logs"
 )
 
 var jingdong = core.NewBucket("jingdong")
@@ -59,6 +60,7 @@ func init() {
 		},
 	})
 	core.OttoFuncs["jingdong"] = getFanli
+	logs.Info("京东佣金短链启动：关注QQ群418353744获取更多消息")
 }
 
 func getFanli(url string) string {
