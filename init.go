@@ -180,7 +180,7 @@ func init() {
 		},
 	})
 	core.OttoFuncs["pinduoduo"] = getPinduoduo 
-	logs.Info("淘宝佣金短链启动：关注QQ群418353744获取更多消息")
+	logs.Info("拼多多佣金短链启动：关注QQ群418353744获取更多消息")
 }
 
 
