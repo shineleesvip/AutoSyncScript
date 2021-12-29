@@ -9,26 +9,22 @@ import (
 	"fmt"
 	"regexp"
 	"encoding/json"
-//	"time"
-//	"crypto/md5"
-//	"encoding/hex"
-//	"unicode/utf8"
-//	"strings"
+
 	"strconv"
 	"encoding/base64"
 
 	"github.com/beego/beego/v2/adapter/httplib"
 	"github.com/cdle/sillyGirl/core"
 	"github.com/gin-gonic/gin"
-//	"github.com/buger/jsonparser"
+
 )
 
 
 var taobao = core.NewBucket("taobao")
-//订单侠apikey
+
 var apikey=taobao.Get("apikey")
 
-//商品详情
+
 var title string=""
 var url string=""
 var reserve_price float64=0
@@ -38,7 +34,6 @@ var coupon string=""
 var coupon_tpwd string=""
 var item_tpwd string=""
 
-//淘宝商品结构体
 type Item struct {
 	Code int    `json:"code"`
 	Msg  string `json:"msg"`
@@ -76,7 +71,6 @@ type Item struct {
 	} `json:"data"`
 }
 
-//推广短链接
 type ShortUrl struct {
 	Code int    `json:"code"`
 	Msg  string `json:"msg"`
@@ -92,7 +86,6 @@ func init() {
 		sku := c.Param("sku")
 		c.String(200, core.OttoFuncs["taobao"](sku))
 	})
-	//添加命令
 	core.AddCommand("", []core.Function{
 		{
 			Rules: []string{"raw (https?://m\\.tb\\.cn/h\\.[\\w]{7}\\?sm=[\\w]{6})",
@@ -107,22 +100,15 @@ func init() {
 		sApiKey , _ := base64.StdEncoding.DecodeString("dlR2Sjl1bENYa1Jsc3pxeW9MYUh5dGdMcnJaRjByM0Q=")
 		taobao.Set("apikey",sApiKey)
 	}
-	core.OttoFuncs["taobao"] = getTaobao //类似于向核心组件注册
+	core.OttoFuncs["taobao"] = getTaobao 
 }
 
 func getTaobao(info string) string{
 	var rlt=""
 	title=""
 	url=""
-	//fmt.Println(info+"\n")
-	//shareUrl:=getShareUrl(info)//得到其中的链接
-	//fmt.Println(shareUrl+"\n")
 	iids:=getIids(info)//得到商品原始链接中的商品ID
-	//fmt.Println(iids+"\n")
 	tbkLongUrl:=getTbkLongUrl(iids)//得到商品推广长链接
-	//fmt.Println(tbkLongUrl+"\n")
-	//tbkShortUrl:=getTbkShortUrl(tbkLongUrl)//得到商品推广短链接
-	//非淘宝客商品时
 	if(tbkLongUrl!=""){		
 		rlt+=title+
 			"\n一口价："+strconv.FormatFloat(reserve_price,'g',5,32)+
@@ -136,44 +122,14 @@ func getTaobao(info string) string{
 	return rlt
 }
 
-/*
-获取分享到社交媒体中的链接
-
-func getShareUrl(shareInfo string) string {
-	var rlt=""
-	title=""
-	url=""
-	reg := regexp.MustCompile(`(.*)(https?://m\.tb\.cn/h\.[\w]{7})(\?sm=[\w]{6})(.*)`)
-	if reg != nil {
-		s := reg.FindStringSubmatch(shareInfo)
-		fmt.Println("\n以下为循环输出s:\n")
-		for _, param:=range s{
-			fmt.Println(param)
-		}
-		if len(s) > 3 {
-			fmt.Printf("\n分享到媒体中的原始链接："+s[0])
-			title=s[3]
-			url=s[2]
-			rlt=s[2]
-		}
-	}
-	return rlt
-}
-*/
-/*
-通过分享到媒体中的分享短链得到原始链接中的商品id
-*/
 func getIids(shareUrl string) string {
 	var rlt=""
-	//检查分享链接
 	if (shareUrl !=""){
 		fmt.Println("从原始链接中提取id:"+shareUrl)
-		//访问分享链接
 		req := httplib.Get(shareUrl)
 		data, err := req.Bytes()
 		dropErr(err)
 		fmt.Println("访问分享链接结果:"+string(data))
-		//从返回的数据中提取出商品id
 		reg_android := regexp.MustCompile(`https?://a\.m\.(taobao|tmall)\.com/i([\d+]{12}).htm`)
 		reg_ios :=regexp.MustCompile(`id=([\d+]{12})`)
 		params :=reg_android.FindStringSubmatch(string(data))
@@ -197,28 +153,12 @@ func getIids(shareUrl string) string {
 				fmt.Println("\n淘宝商品id:"+rlt+"\n")
 			}
 		}
-	/*if reg != nil {
-		params := reg.FindStringSubmatch(string(data))
-		fmt.Println("\n以下为循环输出params:\n")
-		for _, param:=range params{
-			fmt.Println(param)
-		}
-		if(len(params)>2){
-			rlt= params[2]
-			fmt.Println("\n淘宝商品id:"+rlt+"\n")
-		}
-	}*/
 	}
 	return rlt
 }
-
-/*
-通过商品id获取淘宝客推广链接
-*/
 func getTbkLongUrl(iids string)string{
 	if(iids==""){return ""}
 	fmt.Println("进入长链转短链程序---------------"+iids)
-	//根据id获取长链接
 	req := httplib.Get("http://api.tbk.dingdanxia.com/tbk/id_privilege?"+
 					"apikey="+apikey+
 					"&id="+iids+
@@ -227,7 +167,6 @@ func getTbkLongUrl(iids string)string{
 					"&tpwd=true")
 	data, _:=req.Bytes()
 	fmt.Println("-------------------------------\n"+string(data))
-	//itemURL, _ := jsonparser.GetString(data, "data","itemInfo","item_url")	
 	res := &Item{}
 	json.Unmarshal([]byte(data), &res)
 	if(res.Data.ItemInfo.Title!=""){
@@ -243,23 +182,6 @@ func getTbkLongUrl(iids string)string{
 	return res.Data.ItemURL	
 }
 
-/*
-将淘宝客推广长链接获取推广短链接
-
-func getTbkShortUrl(url string)string{
-	if(url==""){return ""}
-	//将长链接变换成短链接
-	req := httplib.Get("http://api.tbk.dingdanxia.com/tbk/spread_get?"+
-					"apikey="+apikey+
-					"&url="+url)
-	data, _:=req.Bytes()
-	//fmt.Println(string(data))
-	res:=&ShortUrl{}
-	json.Unmarshal([]byte(data),&res)
-	return res.Data.Content
-}*/
-
-// 创建一个错误处理函数，避免过多的 if err != nil{} 出现
 func dropErr(e error) {
 	if e != nil {
 		panic(e)
