@@ -14,7 +14,6 @@ import (
 	"github.com/buger/jsonparser"
 	"github.com/cdle/sillyGirl/core"
 	"github.com/gin-gonic/gin"
-	"github.com/beego/beego/v2/core/logs"
 )
 
 var jingdong = core.NewBucket("jingdong")
@@ -26,9 +25,9 @@ func init() {
 		c.String(200, core.OttoFuncs["jingdong"](sku))
 	})
 
-
+	//向core包中添加命令
 	core.AddCommand("", []core.Function{
-		{
+		{//"https:\\/\\/item.m.jd.com\\/product\\/100022622786.html
 			Rules: []string{"raw https?://item\\.m\\.jd\\.[comhk]{2,3}/product/(\\d+).html",
 				"raw https?:\\\\\\/\\\\\\/item\\.m\\.jd\\.[comhk]{2,3}\\\\\\/product\\\\\\/(\\d+).html",
 				"raw https?://.+\\.jd\\.[comhk]{2,3}/(\\d+).html",
@@ -59,12 +58,11 @@ func init() {
 			},
 		},
 	})
-	core.OttoFuncs["jingdong"] = getFanli
-	logs.Info("京东佣金短链启动：关注QQ群418353744获取更多消息")
+	core.OttoFuncs["jingdong"] = getFanli //类似于向核心组件注册
 }
 
 func getFanli(url string) string {
-	sku := core.Int(url)
+	sku := core.Int(url) //从字符串中获取包含的int型数据
 	var content string=""
 	if sku != 0 {
 		content=fmt.Sprintf("https://item.jd.com/%d.html", sku)
@@ -141,6 +139,7 @@ func getFanli(url string) string {
 	return string(rslt)
 }
 
+// 创建一个错误处理函数，避免过多的 if err != nil{} 出现
 func dropErr(e error) {
 	if e != nil {
 		panic(e)
