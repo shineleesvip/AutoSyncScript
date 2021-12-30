@@ -11,32 +11,33 @@ import (
 	"encoding/json"
 	"time"
 	"crypto/md5"
-
+//	"encoding/hex"
+//	"unicode/utf8"
 	"strings"
 	"strconv"
 	"sort"
-
+//	"net/url"
+//	"encoding/base64"
 
 	"github.com/buger/jsonparser"
 	"github.com/beego/beego/v2/adapter/httplib"
 	"github.com/cdle/sillyGirl/core"
 	"github.com/gin-gonic/gin"
-	"github.com/beego/beego/v2/core/logs"
-
+//	"github.com/buger/jsonparser"
 )
 
 
 var pinduoduo = core.NewBucket("pinduoduo")
-
+//拼多多
 var pddSite = "https://gw-api.pinduoduo.com/api/router"
 var apitype = ""
 var client_id=""
 var client_key=""
 var pid=""
 var timestamp=""
-
+//是否完成推广位的媒体id的绑定
 var bind bool=false
-
+//商品
 var goodTitle=""
 var goods_details=""
 
@@ -137,29 +138,32 @@ func init() {
 		sku := c.Param("sku")
 		c.String(200, core.OttoFuncs["pinduoduo"](sku))
 	})
+	//添加命令
 	core.AddCommand("", []core.Function{
 		{
 			//Rules: []string{"raw https?://mobile\\.yangkeduo\\.com/goods.?\\.html\\?goods_id=(\\d+)"},
 			Rules: []string{"raw mobile\\.yangkeduo\\.com"},
 			Handle: func(s core.Sender) interface{} {
 				var resMessage=""
-				
+				//获取必要信息
 				client_id = pinduoduo.Get("client_id")
 				client_key = pinduoduo.Get("client_key")
 				pid = pinduoduo.Get("pid")
 				bind = (pinduoduo.Get("bind")=="true")
-				
+				//发送信息的是管理员
 				if(s.IsAdmin()){
-					if(bind){
-						if(client_id!="" && client_key!="" && pid!=""){
+					if(bind){//完成授权备案的
+						if(client_id!="" && client_key!="" && pid!=""){//设置了必要参数的
 							resMessage=getPinduoduo(s.GetContent())
-						}else{
+						}else{//没设置必要参数
 							resMessage="请设置client_id、client_key、pid必要信息"
 						}
-					}else {
+					}else {//未完成授权备案的
 						bind=queryBind()
+						//bind=false
 						pinduoduo.Set("bind",strconv.FormatBool(bind))
 						fmt.Sprintf("绑定结果："+strconv.FormatBool(bind))
+						
 						if (!bind && client_id!="" && client_key!="" && pid!=""){
 							resMessage= "点击链接授权备案:\n"+setBind()
 						}else if (bind && client_id!="" && client_key!="" && pid!=""){
@@ -168,7 +172,7 @@ func init() {
 							resMessage="请设置client_id、client_key、pid必要信息"
 						}
 					}
-				}else{
+				}else{//发送信息的不是管理员
 					if(client_key!=""&&client_id!=""&&pid!=""&&bind){
 						resMessage=getPinduoduo(s.GetContent())
 					}else{
@@ -179,27 +183,44 @@ func init() {
 			},
 		},
 	})
-	core.OttoFuncs["pinduoduo"] = getPinduoduo 
-	logs.Info("拼多多佣金短链启动：关注QQ群418353744获取更多消息")
+
+	/*
+	if( pinduoduo.Get("client_id")=="" || pinduoduo.Get("client_key")=="" || pinduoduo.Get("pid")=="" ){
+		sAppId , _ := base64.StdEncoding.DecodeString("XXXXXX")
+		pinduoduo.Set("appid",sAppId)
+		sAppKey , _ := base64.StdEncoding.DecodeString("XXXXXX")
+		pinduoduo.Set("appkey",sAppKey)
+		sPid , _ := base64.StdEncoding.DecodeString("XXXXXX")
+		pinduoduo.Set("pid",sPid)
+	}*/
+
+	core.OttoFuncs["pinduoduo"] = getPinduoduo //类似于向核心组件注册
 }
 
-
+//授权备案：https://jinbao.pinduoduo.com/qa-system?questionId=218
+//查询是否绑定
 func queryBind() bool{
+	//对公共参数和业务参数按照ASCII排序,不参加排序：app_secret和sign
 	params:=map[string]string{
 		"type":"pdd.ddk.member.authority.query",
 		"client_id":client_id,
 		"pid":pid,
    		"timestamp": strconv.FormatInt(time.Now().Unix(),10),
 	}
+	//client_key:=pinduoduo.Get("client_key")
+   	//大写(MD5(client_secret+key1+value1+key2+value2+client_secret))
+   	//将排序好的参数名和参数值拼装在一起，两头加client_key
    	sign:=getMd5(client_key,params)
 	data:=accessApi(pddSite,params,sign)
 	
 	bind , _ :=jsonparser.GetInt([]byte(data),"authority_query_response","bind")
 	fmt.Println("检测是否完成授权备案："+strconv.FormatInt(bind,10))
-	return bind==1	
+	return bind==1
+	
 }
 
 func setBind() string{
+	//对公共参数和业务参数按照ASCII排序,不参加排序：app_secret和sign
 	if(client_id!=""&&client_key!=""&&pid!=""){
 		params:=map[string]string{
 			"type": 		"pdd.ddk.rp.prom.url.generate",
@@ -210,10 +231,14 @@ func setBind() string{
 			"channel_type": "10",
 			"timestamp": strconv.FormatInt(time.Now().Unix(),10),
 		}
+		//client_key:=pinduoduo.Get("client_key")
+		//大写(MD5(client_secret+key1+value1+key2+value2+client_secret))
 		sign:=getMd5(client_key,params)
 		fmt.Println("------------------------------------------------------------")
 		fmt.Println("sign:"+sign)
+		//params["p_id_list"]="%5B%22"+pinduoduo.Get("pid")+"%22%5D"
 		data:=accessApi(pddSite,params,sign)
+		//fmt.Println("绑定返回值："+string(data))
 		res := &UrlBind{}
 		json.Unmarshal(data, &res)
 		fmt.Println("------------------------------------------------------------")
@@ -228,6 +253,7 @@ func setBind() string{
 }
 
 func getPinduoduo(info string) string{
+	//从分享到媒体中的信息提取title
 	reg := regexp.MustCompile(`<title>(.*)</title>`)
 	if reg != nil {
 		params := reg.FindStringSubmatch(string(info))
@@ -236,7 +262,9 @@ func getPinduoduo(info string) string{
 			fmt.Println("商品名称:"+goodTitle+"\n")
 		}
 	}
+	//从返回的数据中提取出商品id
 	var source_url=""
+	//reg = regexp.MustCompile(`https?://mobile\.yangkeduo\.com/goods.?\.html\?goods_id=(\d+)`)
 	reg = regexp.MustCompile(`goods_id=(\d+)`)
 	if reg != nil {
 			params := reg.FindStringSubmatch(string(info))
@@ -244,7 +272,9 @@ func getPinduoduo(info string) string{
 			source_url = "https://mobile.yangkeduo.com/goods.html?goods_id="+params[1]
 			fmt.Println("链接:"+source_url+"\n")
 			goods_id:=params[1]		
-			goods_details =getGoodsDetails(goods_id)		
+			//通过goods_id获取goods_sign
+			goods_details =getGoodsDetails(goods_id)
+			//fmt.Println("\n商品goods_sign:"+goods_sign+"\n")		
 		}
 	}
 	short_url:=""
@@ -256,6 +286,7 @@ func getPinduoduo(info string) string{
 	return short_url
 }
 
+//通过goods_id获取商品详情及goods_sign
 func getGoodsDetails(goods_id string)string{
 	params :=map[string]string {
 		"type":"pdd.ddk.goods.search",
@@ -264,9 +295,9 @@ func getGoodsDetails(goods_id string)string{
 		"timestamp":strconv.FormatInt(time.Now().Unix(),10),
 		"keyword": goods_id,
 	}
-
+	//client_key=pinduoduo.Get("client_key")
 	upMd5:=getMd5(client_key,params)
-
+	//将长链接变换成短链接
 	data := accessApi(pddSite,params,upMd5)
 	fmt.Println("商品详情："+string(data))
 	goodName, _ := jsonparser.GetString(data, "goods_name")
@@ -290,9 +321,11 @@ func getGoodsDetails(goods_id string)string{
 	return rlt
 }
 
+//获取短链接
 func getShortUrl(source_url string) string {
 	var rlt=""
 	if(source_url!=""){
+		//对公共参数和业务参数按照ASCII排序,不参加排序：app_secret和sign
 		params :=map[string]string {
 			"type":		"pdd.ddk.goods.zs.unit.url.gen",
 			"client_id": 	client_id,
@@ -300,52 +333,64 @@ func getShortUrl(source_url string) string {
 			"timestamp":	strconv.FormatInt(time.Now().Unix(),10),
 			"source_url":	source_url,
 		}
-
+		//client_key=pinduoduo.Get("client_key")
+		//MD5
 		upMd5:=getMd5(client_key,params)
-
+		//将长链接变换成短链接
 		data:=accessApi(pddSite,params,upMd5)
 		fmt.Println("getShortUrl中得到的接口返回值："+string(data))
 		res:=&ItemUrl{}
 		json.Unmarshal([]byte(data),&res)
+		//fmt.Println(res.GoodsZsUnitGenerateResponse.ShortUrl)
 		rlt = string(res.GoodsZsUnitGenerateResponse.ShortURL)
 	} 
 	return rlt
 }
 
-
+//访问接口
 func accessApi(site string,params map[string]string,sign string) []byte{
 	var dataParams string=""
+	//准备参数
 	for key :=range params{
 		dataParams += key+"="+params[key]+"&"
 	}
 	dataParams +="sign="+getMd5(client_key,params)
+	//真实访问
 	urlstr := site+"?"+dataParams
+	//escapeUrl := url.QueryEscape(urlstr)
 	fmt.Println(urlstr)
 	req := httplib.Get(urlReplace(urlstr))
 	rlt,err := req.Bytes()
+	//str,err:=req.String()
 	dropErr(err)
 	return rlt
 }
 
+//获取md5的值
 func getMd5(client_key string,params map[string]string) string{
 	var dataParams string
 	var keys []string
+	//从map中提取所有的key
 	for k :=range params{
 		keys=append(keys,k)
 	}
+	//对keys进行排序
 	sort.Strings(keys)
+	//拼接
 	for _, k:=range keys{
 		fmt.Println("key:",k,"value:",params[k])
 		dataParams +=k+params[k]
 	}
 	dataParams=client_key+dataParams+client_key
 	fmt.Println("MD5函数拼接的字符串："+dataParams)
+	//md5
 	strMd5:=md5.Sum([]byte(dataParams))
 	upMd5:=strings.ToUpper(fmt.Sprintf("%x",strMd5))
 	fmt.Println("MD5函数获取的MD5值："+upMd5)
 	return upMd5
 }
 
+//替换url中的特殊字符
 func urlReplace(url string) string{
 	urlstr:=strings.Replace(url,"[","%5B",-1)
 	urlstr=strings.Replace(urlstr,"]","%5D",-1)
@@ -353,6 +398,7 @@ func urlReplace(url string) string{
 	return urlstr
 }
 
+// 创建一个错误处理函数，避免过多的 if err != nil{} 出现
 func dropErr(e error) {
 	if e != nil {
 		panic(e)
