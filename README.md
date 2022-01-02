@@ -21,7 +21,7 @@ https://github.com/hdbjlizhe/pdd_fanli
 
 4.https://gituhub.com/hdbjlizhe/pdd_fanli，文件夹下载到sillyGirl/develop/下面
 
-将sillyGirl/dev.go增加一行pdd_fanli的代码"github.com/cdle/sillyGirl/develop/pdd_fanli"
+将sillyGirl/dev.go增加一行pdd_fanli的代码"github.com/cdle/sillyGirl/develop/fanli_pdd"
 
 用命令go build编译一下，然后启动。
 
