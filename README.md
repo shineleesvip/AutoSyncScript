@@ -29,7 +29,7 @@ https://github.com/hdbjlizhe/pdd_fanli
 
 set pinduoduo client_id XXXX
 
-set pinduoduo client_key XXXX
+set pinduoduo client_secret XXXX
 
 set pinduoduo pid XXX
 
