@@ -167,29 +167,6 @@ func getTaobao(info string) string{
 }
 
 /*
-获取分享到社交媒体中的链接
-func getShareUrl(shareInfo string) string {
-	var rlt=""
-	title=""
-	url=""
-	reg := regexp.MustCompile(`(.*)(https?://m\.tb\.cn/h\.[\w]{7})(\?sm=[\w]{6})(.*)`)
-	if reg != nil {
-		s := reg.FindStringSubmatch(shareInfo)
-		fmt.Println("\n以下为循环输出s:\n")
-		for _, param:=range s{
-			fmt.Println(param)
-		}
-		if len(s) > 3 {
-			fmt.Printf("\n分享到媒体中的原始链接："+s[0])
-			title=s[3]
-			url=s[2]
-			rlt=s[2]
-		}
-	}
-	return rlt
-}
-*/
-/*
 通过分享到媒体中的分享短链得到原始链接中的商品id
 */
 func getIids(shareUrl string) string {
@@ -260,22 +237,6 @@ func getTbkLongUrl(iids string)string{
 	return res.Data.ItemURL	
 }
 
-/*
-将淘宝客推广长链接获取推广短链接
-func getTbkShortUrl(url string)string{
-	if(url==""){return ""}
-	//将长链接变换成短链接
-	req := httplib.Get("http://api.tbk.dingdanxia.com/tbk/spread_get?"+
-					"apikey="+apikey+
-					"&url="+url)
-	data, _:=req.Bytes()
-	//fmt.Println(string(data))
-	res:=&ShortUrl{}
-	json.Unmarshal([]byte(data),&res)
-	return res.Data.Content
-}*/
-
-// 创建一个错误处理函数，避免过多的 if err != nil{} 出现
 func dropErr(e error) {
 	if e != nil {
 		panic(e)
