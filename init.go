@@ -226,17 +226,6 @@ func getIids(shareUrl string) string {
 				fmt.Println("\n淘宝商品id:"+rlt+"\n")
 			}
 		}
-	/*if reg != nil {
-		params := reg.FindStringSubmatch(string(data))
-		fmt.Println("\n以下为循环输出params:\n")
-		for _, param:=range params{
-			fmt.Println(param)
-		}
-		if(len(params)>2){
-			rlt= params[2]
-			fmt.Println("\n淘宝商品id:"+rlt+"\n")
-		}
-	}*/
 	}
 	return rlt
 }
@@ -255,8 +244,7 @@ func getTbkLongUrl(iids string)string{
 					"&shorturl=true"+
 					"&tpwd=true")
 	data, _:=req.Bytes()
-	fmt.Println("-------------------------------\n"+string(data))
-	//itemURL, _ := jsonparser.GetString(data, "data","itemInfo","item_url")	
+	fmt.Println("-------------------------------\n"+string(data))	
 	res := &Item{}
 	json.Unmarshal([]byte(data), &res)
 	if(res.Data.ItemInfo.Title!=""){
