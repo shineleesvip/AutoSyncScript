@@ -13,18 +13,12 @@ import (
 	"github.com/beego/beego/v2/adapter/httplib"
 	"github.com/buger/jsonparser"
 	"github.com/cdle/sillyGirl/core"
-	"github.com/gin-gonic/gin"
+//	"github.com/gin-gonic/gin"
 )
 
 var jingdong = core.NewBucket("jingdong")
 
 func init() {
-
-	core.Server.GET("/jingdong/:sku", func(c *gin.Context) {
-		sku := c.Param("sku")
-		c.String(200, core.OttoFuncs["jingdong"](sku))
-	})
-
 	//向core包中添加命令
 	core.AddCommand("", []core.Function{
 		{//"https:\\/\\/item.m.jd.com\\/product\\/100022622786.html
@@ -58,11 +52,11 @@ func init() {
 			},
 		},
 	})
-	core.OttoFuncs["jingdong"] = getFanli //类似于向核心组件注册
+	core.OttoFuncs["jingdong"] = getFanli 
 }
-
+//
 func getFanli(url string) string {
-	sku := core.Int(url) //从字符串中获取包含的int型数据
+	sku := core.Int(url) 
 	var content string=""
 	if sku != 0 {
 		content=fmt.Sprintf("https://item.jd.com/%d.html", sku)
