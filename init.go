@@ -127,10 +127,6 @@ type ShortUrl struct {
 
 func init() {
 
-	core.Server.GET("/taobao/:sku", func(c *gin.Context) {
-		sku := c.Param("sku")
-		c.String(200, core.OttoFuncs["taobao"](sku))
-	})
 	//添加命令
 	core.AddCommand("", []core.Function{
 		{
@@ -146,7 +142,6 @@ func init() {
 		sApiKey , _ := base64.StdEncoding.DecodeString("dlR2Sjl1bENYa1Jsc3pxeW9MYUh5dGdMcnJaRjByM0Q=")
 		taobao.Set("apikey",sApiKey)
 	}
-	core.OttoFuncs["taobao"] = getTaobao //类似于向核心组件注册
 }
 
 func getTaobao(info string) string{
