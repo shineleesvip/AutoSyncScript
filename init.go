@@ -188,8 +188,6 @@ func init() {
 		sPid , _ := base64.StdEncoding.DecodeString("XXXXXX")
 		pinduoduo.Set("pid",sPid)
 	}*/
-
-	core.OttoFuncs["pinduoduo"] = getPinduoduo //类似于向核心组件注册
 }
 
 //授权备案：https://jinbao.pinduoduo.com/qa-system?questionId=218
