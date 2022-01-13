@@ -133,11 +133,6 @@ type ItemSign struct {
 }
 
 func init() {
-
-	core.Server.GET("/pinduoduo/:sku", func(c *gin.Context) {
-		sku := c.Param("sku")
-		c.String(200, core.OttoFuncs["pinduoduo"](sku))
-	})
 	//添加命令
 	core.AddCommand("", []core.Function{
 		{
