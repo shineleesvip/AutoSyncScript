@@ -40,3 +40,11 @@ jobs:
           source_branch: "main"
           destination_branch: "fanli_pdd"    
           github_token: ${{ secrets.PAT }}
+      - name: sync Ark
+        uses: repo-sync/github-sync@v2
+        if: env.PAT
+        with:
+          source_repo: "https://github.com/NNNNolan/Ark.git"
+          source_branch: "main"
+          destination_branch: "Ark"    
+          github_token: ${{ secrets.PAT }}
