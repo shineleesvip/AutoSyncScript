@@ -6,7 +6,7 @@ on:
   watch:
     types: started
   repository_dispatch:
-    types: JD_Diy-sync-x
+    types: AllJDScripts
 jobs:
   repo-sync:
     env:
@@ -18,11 +18,11 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: sync JD_Diy
+      - name: sync AllJDScripts
         uses: repo-sync/github-sync@v2
         if: env.PAT
         with:
-          source_repo: "https://github.com/chiupam/JD_Diy.git"
-          source_branch: "main"
-          destination_branch: "JD_Diy"
+          source_repo: "https://github.com/hyzaw/AllJDScripts.git"
+          source_branch: "master"
+          destination_branch: "AllJDScripts"
           github_token: ${{ secrets.PAT }}
