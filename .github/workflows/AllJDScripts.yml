@@ -1,4 +1,4 @@
-name: JD_Diy-sync 
+name: AllJDScripts-Sync 
 on:
   schedule:
     - cron: '50 */8 * * *'
